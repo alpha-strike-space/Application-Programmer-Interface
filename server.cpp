@@ -231,7 +231,9 @@ int main() {
         // Get server health
         CROW_ROUTE(app, "/health").methods("GET"_method)([]() {
                 // Create response value.
-                return crow::response(200, std::string("I'm alive!"));
+		crow::json::wvalue response;
+		response["Health"] = "I'm alive!";
+                return crow::response(200, response);
         });
         // get locations
         CROW_ROUTE(app, "/location").methods("GET"_method)([](const crow::request &req) -> crow::response {
@@ -275,7 +277,10 @@ int main() {
                         } catch (const std::exception& e){
 				// Log the error and return an error message.
         			std::cerr << "Error: " << e.what() << std::endl;
-                                return crow::response(500, std::string("Internal Server Error!"));
+				// Create response value.
+				crow::json::wvalue error_response;
+				error_response["error"] = "Internal Server Error!";
+                                return crow::response(500, error_response);
                         }
                 } else {
                        // Send error for method issues.
@@ -470,7 +475,10 @@ int main() {
 				}
 		} catch(const std::exception& e) {
                                 std::cerr << "Notification error: " << e.what() << "\n";
-                                return crow::response(500, std::string("Internal Server Error!"));
+				// Create response value.
+				crow::json::wvalue error_response;
+				error_response["error"] = "Internal Server Error!";
+                                return crow::response(500, error_response);
 		}
 	});
         // Get incidents
@@ -675,7 +683,10 @@ int main() {
                         // Error catching
                         } catch(const std::exception& e) {
                                 std::cerr << "Notification error: " << e.what() << "\n";
-                                return crow::response(500, std::string("Internal Server Error!"));
+				// Create response value.
+				crow::json::wvalue error_response;
+				error_response["error"] = "Internal Server Error!";
+                                return crow::response(500, error_response);
                         }
                 } else {
                         // Send error for method issues.
