@@ -10,7 +10,7 @@ include(FetchContent)
 FetchContent_Declare(
   asio
   GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git # https://github.com/boostorg/asio.git
-  GIT_TAG master  # Master tag on github.
+  GIT_TAG master  # Master tag on github. Choose your favorite tag.
 )
 FetchContent_MakeAvailable(asio)
 # We have to set the directory, otherwise crow won't have a file to find for building. We also set the flag to t>
@@ -34,7 +34,7 @@ endif()
 FetchContent_Declare(
   libpqxx
   GIT_REPOSITORY https://github.com/jtv/libpqxx.git
-  GIT_TAG master # Master tag on github.
+  GIT_TAG master # Master tag on github. Choose your favorite tag.
 )
 FetchContent_MakeAvailable(libpqxx)
 # If we recieved pqxx_static we create an alias for when pqxx is linked later for server.cpp file.
@@ -49,7 +49,7 @@ endif()
 FetchContent_Declare(
   nlohmann_json
   GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.10.5 # You can change this to the specific tag or commit you require
+  GIT_TAG v3.10.5 # You can change this to the specific tag or commit you require.
 )
 FetchContent_MakeAvailable(nlohmann_json)
 # Add the cpp file and subsequent executable.
