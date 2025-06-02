@@ -68,13 +68,8 @@ public:
             filtered_json["solar_system_name"] = fetched_value;
         }
 	std::string json_string = filtered_json.dump(4); // Pretty printing with indent of 4 spaces
-        // Create a Crow response with the correct Content-Type header
-//        crow::response resp(json_string);
-//        resp.set_header("Content-Type", "application/json");
 	// Logging
-	std::cout << json_string << std::endl;
-    	//std::string json_string = resp.body;
-        //std::cout << json_string;
+	//std::cout << json_string << std::endl;
         // Send the notification to every connected WebSocket client.
         for (auto* ws : ws_connections) {
             //ws->send_text(message);
@@ -128,7 +123,6 @@ void listen_notifications() {
                 // Sleep before attempting to reconnect.
                 std::this_thread::sleep_for(std::chrono::seconds(5));
                 // The outer while loop then causes reattempt of connection and registration.
-                //std::cerr << "Notification error: " << e.what() << "\n";
         }
     }
 }
@@ -153,7 +147,6 @@ nlohmann::ordered_json build_incident_json(const pqxx::result& res) {
         // Add to the array.
         json_array.push_back(std::move(item));
     }
-
     return json_array;
 }
 // Parsing json function for the location endpoint.
@@ -588,7 +581,7 @@ int main() {
                                                 return crow::response(400, error_response);
                                         }
 				} else if(mail_parameter) {
-                                        // Convert the string to a 64-bit integer using std::stoll.
+                                        // Convert the string to a 64-bit integer using std::stoi.
                                         int searchPattern;
     					try {
        	 					searchPattern = std::stoi(std::string(mail_parameter));
@@ -683,7 +676,6 @@ int main() {
                         } catch(const std::exception& e) {
                                 std::cerr << "Notification error: " << e.what() << "\n";
                                 return crow::response(500, std::string("Internal Server Error!"));
-                                //std::cout << e.what();
                         }
                 } else {
                         // Send error for method issues.
@@ -699,7 +691,6 @@ int main() {
                     ws_connections.push_back(&ws);
                 }
                 // Inform the client that they've connected to the notification service.
-                //ws.send_text("Connected to alpha-strikes notification service.");
 		nlohmann::json msg;
 		msg["message"] = "Connected to alpha-strikes notification service.";
 		// Now send the JSON string (using .dump() to serialize it)
@@ -711,8 +702,6 @@ int main() {
                 ws_connections.erase(std::remove(ws_connections.begin(), ws_connections.end(), &ws), ws_connections.end());
         }).onmessage([](crow::websocket::connection& ws, const std::string& msg, bool is_binary) {
                 // Simple echo for demonstration
-                //ws.send_text("Knocking on my door? Join the discord listed on the documentation page! Echo: \n\n" + msg);
-		// Let's assume 'msg' is a std::string containing the message you want to echo.
 		nlohmann::json response;
 		response["message"] = "Knocking on my door? Join the discord listed on the documentation page!";
 		response["echo"] = msg;
