@@ -729,6 +729,6 @@ int main() {
         std::thread pg_listener(listen_notifications);
         // Force address and port
         app.bindaddr("0.0.0.0").port(8080).multithreaded().run();
-        // In practice, you would handle shutdown more gracefully.
+        // In practice, you would handle shutdown more gracefully. Unfortunately has not been implemented yet.
         pg_listener.join();
 }
