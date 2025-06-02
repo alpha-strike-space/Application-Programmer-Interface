@@ -39,7 +39,7 @@ public:
     	    throw std::runtime_error("Failed to parse JSON: " + std::string(e.what()));
     	}
         // Finally, copy the rest of the fields from parsed_json.
-	//filtered_json["id"] = parsed_json["id"];
+	filtered_json["id"] = parsed_json["id"];
         filtered_json["victim_name"] = parsed_json["victim_name"];
         filtered_json["loss_type"] = parsed_json["loss_type"];
 	filtered_json["killer_name"] = parsed_json["killer_name"];
