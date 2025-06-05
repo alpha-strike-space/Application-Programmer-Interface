@@ -50,7 +50,7 @@ endif()
 FetchContent_Declare(
   nlohmann_json
   GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.10.5 # You can change this to the specific tag or commit you require.
+  GIT_TAG v3.12.0  # Updated to a newer version that's compatible with modern CMake
 )
 FetchContent_MakeAvailable(nlohmann_json)
 # Find PostgreSQL
