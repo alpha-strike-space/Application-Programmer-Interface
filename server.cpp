@@ -14,7 +14,7 @@
 #include <nlohmann/json.hpp>
 // Graceful shutdown
 std::atomic<bool> shutdown_requested(false);
-
+// Signal handling from system management.
 void signal_handler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
         shutdown_requested = true;
