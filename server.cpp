@@ -9,7 +9,17 @@
 #include <algorithm>
 #include <locale>
 #include <stdexcept>
+#include <signal.h>
+#include <atomic>
 #include <nlohmann/json.hpp>
+// Graceful shutdown
+std::atomic<bool> shutdown_requested(false);
+
+void signal_handler(int signal) {
+    if (signal == SIGINT || signal == SIGTERM) {
+        shutdown_requested = true;
+    }
+}
 // Store WebSocket connections
 // Global container to hold active WebSocket connections
 std::vector<crow::websocket::connection*> ws_connections;
@@ -83,7 +93,7 @@ public:
 // Function to listen for PostgreSQL notifications
 void listen_notifications() {
     // The outer loop allows us to automatically attempt reconnection if something goes wrong.
-    while (true) {
+    while (!shutdown_requested) {
         try {
                 // Connection
                 pqxx::connection conn(/* "dbname= user= password= host= port=" */);
@@ -98,7 +108,7 @@ void listen_notifications() {
                    std::cout << "Listening on channel 'incident_trigger' for notifications..." << std::endl;
                 }
                 // Main listening loop.
-                while (conn.is_open()) {
+                while (conn.is_open() && !shutdown_requested) {
                         // Wait up to 1000 milliseconds for a notification.
                         // (Note: Some versions of libpqxx support a timeout parameter for await_notification.)
                         bool notification_received = conn.await_notification(1000);
@@ -124,6 +134,7 @@ void listen_notifications() {
                 std::this_thread::sleep_for(std::chrono::seconds(5));
                 // The outer while loop then causes reattempt of connection and registration.
         }
+	if (shutdown_requested) break;
     }
 }
 // Parsing json function for incident endpoint.
@@ -224,6 +235,9 @@ nlohmann::ordered_json formatSystems(const pqxx::result& resSystems) {
 }
 // Main API function end-point architecture.
 int main() {
+	// Register signal handlers for graceful shutdown
+    	signal(SIGINT, signal_handler);
+    	signal(SIGTERM, signal_handler);
         // Log everything
         crow::logger::setLogLevel(crow::LogLevel::Debug);
         // Create the crow application
@@ -725,10 +739,16 @@ int main() {
                 // Now send the JSON string (using .dump() to serialize it)
                 ws.send_text(msg.dump());
         });
-        // Start the PostgreSQL listener in a separate thread.
-        std::thread pg_listener(listen_notifications);
-        // Force address and port
-        app.bindaddr("0.0.0.0").port(8080).multithreaded().run();
-        // In practice, you would handle shutdown more gracefully. Unfortunately has not been implemented yet.
-        pg_listener.join();
+	// Start the PostgreSQL listener in a separate thread.
+    	std::thread pg_listener(listen_notifications);
+    	// Start Crow asynchronously (not .run(), but .run_async())
+    	app.bindaddr("0.0.0.0").port(8080).multithreaded().run_async();
+    	// Wait for shutdown signal
+    	while (!shutdown_requested) {
+     		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    	}
+    	// Stop the Crow server gracefully
+    	app.stop();
+    	pg_listener.join();
+    	return 0;
 }
