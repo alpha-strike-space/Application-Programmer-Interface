@@ -72,7 +72,7 @@ public:
 	//std::cout << json_string << std::endl;
         // Send the notification to every connected WebSocket client.
         for (auto* ws : ws_connections) {
-            //ws->send_text(message);
+            // Remember, we send strings over websockets. It isn't serialized in this case.
             ws->send_text(json_string);
         }
     }
@@ -689,7 +689,7 @@ int main() {
                                 return crow::response(500, error_response);
                         }
                 } else {
-                        // Send error for method issues.
+                        // Send error for method issues. This is where our post function will go when the Eve Frontier API is updated.
                         return crow::response(405);
                 }
             });
