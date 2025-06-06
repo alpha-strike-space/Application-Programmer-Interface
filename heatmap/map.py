@@ -160,14 +160,16 @@ fig.write_html(
     post_script="""
     var plot = document.getElementsByClassName('plotly-graph-div')[0];
     plot.on('plotly_click', function(data){
+        var opened = false;
         for (var i = 0; i < data.points.length; i++) {
             var point = data.points[i];
             // Only redirect for nonzero kill systems (trace index 1)
-            if (point.curveNumber === 1) {
+            if (point.curveNumber === 1 && !opened) {
                 var system = point.customdata;
                 if (system) {
                     var url = 'https://alpha-strike.space/pages/search.html?query=' + encodeURIComponent(system) + '&type=system';
                     window.open(url, '_blank');
+                    opened = true;
                     break; // Only open one tab
                 }
             }
