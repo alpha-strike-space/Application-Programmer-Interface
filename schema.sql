@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS incident (
     loss_type        TEXT,
     killer_address   TEXT,
     killer_name      TEXT,
-    solar_system_id  BIGINT REFERENCES systems(solar_system_id),
-    time_stamp       BIGINT
+    time_stamp       BIGINT,
+    solar_system_id  BIGINT,
+    solar_system_name TEXT NOT NULL
+    
 ); 
