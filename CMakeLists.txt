@@ -53,10 +53,13 @@ FetchContent_Declare(
   GIT_TAG v3.12.0  # Updated to a newer version that's compatible with modern CMake
 )
 FetchContent_MakeAvailable(nlohmann_json)
-# Find PostgreSQL
-find_package(PostgreSQL REQUIRED)
+
 # Add the cpp file and subsequent executable.
 add_executable(server server.cpp)
+# Find PostgreSQL
+add_subdirectory(cpp-dotenv)
+target_include_directories(server PRIVATE cpp-dotenv/include)
+target_link_libraries(server PRIVATE cpp_dotenv)
 # Link libpqxx to PostgreSQL, a C dependency.
 target_link_libraries(server PRIVATE pqxx::pqxx ${PostgreSQL_LIBRARIES})
 target_include_directories(server PRIVATE ${PostgreSQL_INCLUDE_DIRS})

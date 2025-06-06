@@ -12,6 +12,13 @@
 #include <signal.h>
 #include <atomic>
 #include <nlohmann/json.hpp>
+#include "dotenv.h"
+#include <cstdlib>
+
+using namespace dotenv;
+
+std::string make_conn_str();
+
 // Graceful shutdown
 std::atomic<bool> shutdown_requested(false);
 // Signal handling from system management.
@@ -56,7 +63,7 @@ public:
        	filtered_json["time_stamp"] = parsed_json["time_stamp"];
         filtered_json["solar_system_id"] = parsed_json["solar_system_id"];
         // Create the PostgreSQL connection.
-        pqxx::connection conn(/* "dbname= user= password= host= port=" */);
+        pqxx::connection conn(make_conn_str());
         pqxx::work txn(conn);
         // Prepare the query. We use ILIKE for case-insensitive matching.
         std::string query = "SELECT solar_system_name FROM systems WHERE solar_system_id::text ILIKE $1;";
@@ -95,8 +102,9 @@ void listen_notifications() {
     // The outer loop allows us to automatically attempt reconnection if something goes wrong.
     while (!shutdown_requested) {
         try {
+			    
                 // Connection
-                pqxx::connection conn(/* "dbname= user= password= host= port=" */);
+                pqxx::connection conn(make_conn_str());
                 // Instantiate our notification receiver on channel "incident_trigger"
                 NotifyListener listener(conn, "incident_trigger");
 
@@ -235,6 +243,8 @@ nlohmann::ordered_json formatSystems(const pqxx::result& resSystems) {
 }
 // Main API function end-point architecture.
 int main() {
+	// Load the environment variables
+	env.load_dotenv();	
 	// Register signal handlers for graceful shutdown
     	signal(SIGINT, signal_handler);
     	signal(SIGTERM, signal_handler);
@@ -254,7 +264,7 @@ int main() {
                 // Get Method
                 if(req.method == crow::HTTPMethod::Get) {
                         try {
-                                pqxx::connection conn(/* "dbname= user= password= host= port=" */);
+                                pqxx::connection conn(make_conn_str());
                                 pqxx::work txn(conn);
                                 pqxx::result res;
                                 // Check for the parameters by initializing a pointer for the url sent.
@@ -311,7 +321,7 @@ int main() {
 		// Try user input.
 		try {
                                 // Get your PostgreSQL connection
-                                pqxx::connection conn(/* "dbname= user= password= host= port=" */);
+                                pqxx::connection conn(make_conn_str());
                                 pqxx::work txn(conn);
                                 pqxx::result res;
 				pqxx::result resKillers;
@@ -501,7 +511,7 @@ int main() {
                 if(req.method == crow::HTTPMethod::Get) {
                         try {
                                 // Get your PostgreSQL connection
-                                pqxx::connection conn(/* "dbname= user= password= host= port=" */);
+                                pqxx::connection conn(make_conn_str());
                                 pqxx::work txn(conn);
                                 pqxx::result res;
                                 // Check for the parameters by initializing a pointer for the url sent.
@@ -751,4 +761,17 @@ int main() {
     	app.stop();
     	pg_listener.join();
     	return 0;
+}
+
+/**
+ * @brief Make the connection string for the PostgreSQL connection.
+ * @return A string containing the connection string.
+ */
+
+std::string make_conn_str() {
+	return "dbname=" + env["DB_NAME"] +
+		" user=" + env["DB_USER"] +
+		" password=" + env["DB_PASSWORD"] +
+		" host=" + env["DB_HOST"] +
+		" port=" + env["DB_PORT"];
 }
