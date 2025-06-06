@@ -82,6 +82,7 @@ trace_zero = go.Scatter3d(
         color='gray',
         opacity=0.2
     ),
+    customdata=df_zero['solar_system_name'],
     name='0 kills',
     showlegend=True,
     text=df_zero['solar_system_name'],
@@ -99,6 +100,7 @@ trace_nonzero = go.Scatter3d(
         cmin=df['kill_count'].min(),
         cmax=upper
     ),
+    customdata=df_nonzero['solar_system_name'],
     name='>0 kills',
     text=df_nonzero['solar_system_name'],
     hovertemplate='System ID: %{text}<br>Kills: %{marker.color}<extra></extra>'
@@ -151,4 +153,25 @@ fig.update_layout(
     )
 )
 
-fig.write_html("scatter.html")
+fig.write_html(
+    "scatter.html",
+    include_plotlyjs='cdn',
+    full_html=True,
+    post_script="""
+    var plot = document.getElementsByClassName('plotly-graph-div')[0];
+    plot.on('plotly_click', function(data){
+        for (var i = 0; i < data.points.length; i++) {
+            var point = data.points[i];
+            // Only redirect for nonzero kill systems (trace index 1)
+            if (point.curveNumber === 1) {
+                var system = point.customdata;
+                if (system) {
+                    var url = 'https://alpha-strike.space/pages/search.html?query=' + encodeURIComponent(system) + '&type=system';
+                    window.open(url, '_blank');
+                    break; // Only open one tab
+                }
+            }
+        }
+    });
+    """
+)
