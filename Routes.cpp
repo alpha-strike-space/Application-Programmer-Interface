@@ -1,240 +1,9 @@
-#include "crow.h"
-#include "pqxx/pqxx"
+#include "Routes.h"
+#include "Serializer.h"
+#include <pqxx/pqxx>
 #include <iostream>
-#include <vector>
-#include <set>
-#include <mutex>
-#include <thread>
-#include <chrono>
-#include <algorithm>
-#include <locale>
-#include <stdexcept>
-#include <signal.h>
-#include <atomic>
-#include <nlohmann/json.hpp>
-// Graceful shutdown
-std::atomic<bool> shutdown_requested(false);
-// Signal handling from system management.
-void signal_handler(int signal) {
-    if (signal == SIGINT || signal == SIGTERM) {
-        shutdown_requested = true;
-    }
-}
-// Store WebSocket connections
-// Global container to hold active WebSocket connections
-std::vector<crow::websocket::connection*> ws_connections;
-std::mutex ws_mutex;
-// Minimal notification receiver for PostgreSQL triggers,
-// now matching the abstract base's expected signature.
-class NotifyListener : public pqxx::notification_receiver {
-public:
-    // Construct by passing a reference to the open connection and the channel to listen on.
-    NotifyListener(pqxx::connection_base &conn, const std::string &channel)
-        : pqxx::notification_receiver(conn, channel) {}
-
-    // This method is called automatically when a notification is received.
-    // It receives the payload and the sender's backend process ID.
-    void operator()(const std::string &payload, int backend_pid) override {
-        // Lock down our users
-        std::lock_guard<std::mutex> lock(ws_mutex);
-        // Build our json response using nlohmann
-        nlohmann::ordered_json filtered_json;
-	nlohmann::ordered_json parsed_json;
-    	// Make sure we have json from the postgresql trigger.
-	try {
-    	    	// Attempt to parse the JSON string.
-    		parsed_json = nlohmann::json::parse(payload);
-    	} catch (const nlohmann::json::parse_error& e) {
-        // If parsing fails, throw a runtime error.
-    	    throw std::runtime_error("Failed to parse JSON: " + std::string(e.what()));
-    	}
-        // Finally, copy the rest of the fields from parsed_json.
-	filtered_json["id"] = parsed_json["id"];
-        filtered_json["victim_name"] = parsed_json["victim_name"];
-        filtered_json["loss_type"] = parsed_json["loss_type"];
-	filtered_json["killer_name"] = parsed_json["killer_name"];
-       	filtered_json["time_stamp"] = parsed_json["time_stamp"];
-        filtered_json["solar_system_id"] = parsed_json["solar_system_id"];
-        // Create the PostgreSQL connection.
-        pqxx::connection conn(/* "dbname= user= password= host= port=" */);
-        pqxx::work txn(conn);
-        // Prepare the query. We use ILIKE for case-insensitive matching.
-        std::string query = "SELECT solar_system_name FROM systems WHERE solar_system_id::text ILIKE $1;";
-        // Convert the solar_system_id to a string.
-        // If it's a number, you may convert it using std::to_string.
-        std::string solar_system_id_str;
-        if (filtered_json["solar_system_id"].is_number_integer()) {
-            solar_system_id_str = std::to_string(filtered_json["solar_system_id"].get<long long>());
-        } else {
-            // If it is already a string, retrieve it directly.
-            solar_system_id_str = filtered_json["solar_system_id"].get<std::string>();
-        }
-        // Execute the query with parameter binding.
-        pqxx::result result = txn.exec_params(query, solar_system_id_str);
-        txn.commit();
-        // If a valid result was found, add the solar_system_name into filtered_json.
-        if (!result.empty()) {
-            std::string fetched_value = result[0][0].as<std::string>();
-            filtered_json["solar_system_name"] = fetched_value;
-        }
-	std::string json_string = filtered_json.dump(4); // Pretty printing with indent of 4 spaces
-	// Logging
-	//std::cout << json_string << std::endl;
-        // Send the notification to every connected WebSocket client.
-        for (auto* ws : ws_connections) {
-            // Remember, we send strings over websockets. It isn't serialized in this case.
-            ws->send_text(json_string);
-        }
-    }
-};
-// This function connects to PostgreSQL, issues a LISTEN command,
-// and continuously polls for notifications. When a notification is
-// received, its payload is forwarded to all active WebSocket clients.
-// Function to listen for PostgreSQL notifications
-void listen_notifications() {
-    // The outer loop allows us to automatically attempt reconnection if something goes wrong.
-    while (!shutdown_requested) {
-        try {
-                // Connection
-                pqxx::connection conn(/* "dbname= user= password= host= port=" */);
-                // Instantiate our notification receiver on channel "incident_trigger"
-                NotifyListener listener(conn, "incident_trigger");
-
-                // Begin a transaction to issue the LISTEN command on the desired channel.
-                {
-                   pqxx::work txn(conn);
-                   txn.exec("LISTEN incident_trigger;");
-                   txn.commit();
-                   std::cout << "Listening on channel 'incident_trigger' for notifications..." << std::endl;
-                }
-                // Main listening loop.
-                while (conn.is_open() && !shutdown_requested) {
-                        // Wait up to 1000 milliseconds for a notification.
-                        // (Note: Some versions of libpqxx support a timeout parameter for await_notification.)
-                        bool notification_received = conn.await_notification(1000);
-                        // Check notification
-                        if (!notification_received) {
-                                // A timeout occurred without any notifications. This is a good moment
-                                // to perform a lightweight heartbeat query to ensure the connection is still he>
-                             try {
-                                        pqxx::nontransaction nt(conn);
-                                        nt.exec("SELECT 1;");
-                                        // Optionally, log heartbeat messages for debugging:
-                                        // std::cout << "Heartbeat OK." << std::endl;
-                                }
-                                catch (const std::exception &e) {
-                                        std::cerr << "Heartbeat failure: " << e.what() << std::endl;
-                                        throw; // Re-throw to enter the outer catch block and reconnect.
-                                }
-                        }
-                }
-        } catch (const std::exception &e) {
-                std::cerr << "Error in notification listener: " << e.what() << "\nAttempting to reconnect in 5 seconds" << std::endl;
-                // Sleep before attempting to reconnect.
-                std::this_thread::sleep_for(std::chrono::seconds(5));
-                // The outer while loop then causes reattempt of connection and registration.
-        }
-	if (shutdown_requested) break;
-    }
-}
-// Parsing json function for incident endpoint.
-nlohmann::ordered_json build_incident_json(const pqxx::result& res) {
-    // Create an empty JSON array.
-    nlohmann::ordered_json json_array = nlohmann::ordered_json::array();
-    // Loop through each row in the pqxx::result.
-    for (const auto& row : res) {
-	// Create json to iterate over.
-        nlohmann::ordered_json item;
-	// All the mail information
-	item["id"] = row["id"].as<long long>();
-        item["victim_address"] = row["victim_address"].as<std::string>();
-        item["victim_name"] = row["victim_name"].as<std::string>();
-        item["loss_type"] = row["loss_type"].as<std::string>();
-        item["killer_address"] = row["killer_address"].as<std::string>();
-        item["killer_name"] = row["killer_name"].as<std::string>();
-	item["time_stamp"] = row["time_stamp"].as<long long>();
-        item["solar_system_id"] = row["solar_system_id"].as<long long>();
-	item["solar_system_name"] = row["solar_system_name"].as<std::string>();
-        // Add to the array.
-        json_array.push_back(std::move(item));
-    }
-    return json_array;
-}
-// Parsing json function for the location endpoint.
-nlohmann::ordered_json build_system_json(const pqxx::result& res) {
-    nlohmann::ordered_json json_array = nlohmann::ordered_json::array();
-    for (const auto& row : res) {
-        // Create json to iterate over.
-	nlohmann::ordered_json item;
-        // List name and identifier
-        item["solar_system_id"] = row["solar_system_id"].as<long long>();
-        item["solar_system_name"] = row["solar_system_name"].as<std::string>();
-	// Group the coordinate values under a single "coordinates" object.
-        item["coordinates"] = {
-            {"x", row["x"].as<std::string>()},
-            {"y", row["y"].as<std::string>()},
-            {"z", row["z"].as<std::string>()}
-        };
-	// Group the coordinate values under a single "coordinates" object.
-	// Add to the array.
-        json_array.push_back(std::move(item));
-    }
-    return json_array;
-}
-// Format query results for totals endpoint based on name.
-nlohmann::ordered_json formatName(const pqxx::result& resName) {
-	nlohmann::ordered_json jsonResponse = nlohmann::ordered_json::array();
-	for (const auto& row : resName) {
-            	// Create json to iterate over
-		nlohmann::ordered_json item;
-            	item["name"] = row["person"].as<std::string>();
-            	item["total_kills"] = row["total_kills"].as<int>();
-            	item["total_losses"] = row["total_losses"].as<int>();
-            	jsonResponse.push_back(item);
-	}
-	return jsonResponse;
-}
-// Format query results for top killers.
-nlohmann::ordered_json formatTopKillers(const pqxx::result& resKillers) {
-   	nlohmann::ordered_json topKillers = nlohmann::ordered_json::array();
-    	for (const auto& row : resKillers) {
-		// Create json to iterate over
-        	nlohmann::ordered_json item;
-		// List name and incident count.
-        	item["name"] = row["name"].as<std::string>();
-        	item["kills"] = row["incident_count"].as<int>();
-        	topKillers.push_back(item);
-    	}
-    	return topKillers;
-}
-// Format query results for top victims.
-nlohmann::ordered_json formatTopVictims(const pqxx::result& resVictims) {
-    	nlohmann::ordered_json topVictims = nlohmann::ordered_json::array();
-    	for (const auto& row : resVictims) {
-        	// Create json to iterate over
-		nlohmann::ordered_json item;
-		// List name and incident count
-        	item["name"] = row["name"].as<std::string>();
-        	item["losses"] = row["incident_count"].as<int>();
-        	topVictims.push_back(item);
-    	}
-    	return topVictims;
-}
-// Format query results for top systems.
-nlohmann::ordered_json formatSystems(const pqxx::result& resSystems) {
-   	nlohmann::ordered_json topSystems = nlohmann::ordered_json::array();
-    	for (const auto& row : resSystems) {
-		// Create json to iterate over
-        	nlohmann::ordered_json item;
-        	item["solar_system_id"] = row["solar_system_id"].as<std::string>();
-        	item["solar_system_name"] = row["solar_system_name"].as<std::string>();
-        	item["incident_count"] = row["incident_count"].as<int>();
-        	topSystems.push_back(item);
-    	}
-    	return topSystems;
-}
-// Main API function end-point architecture.
-int main() {
+// Health route and all HTTP API routes here
+void setupRoutes(crow::SimpleApp& app) {
 	// Register signal handlers for graceful shutdown
     	signal(SIGINT, signal_handler);
     	signal(SIGTERM, signal_handler);
@@ -707,7 +476,15 @@ int main() {
                         return crow::response(405);
                 }
             });
-	// Websocket
+}
+// Websocket
+#include <mutex>
+#include <vector>
+// Make sure these are declared
+std::vector<crow::websocket::connection*> ws_connections;
+std::mutex ws_mutex;
+
+void setupWebSocket(crow::SimpleApp& app) {
         CROW_WEBSOCKET_ROUTE(app, "/mails").onopen([](crow::websocket::connection& ws) {
                 std::cout << "WebSocket connection established." << std::endl;
                 {
@@ -739,16 +516,4 @@ int main() {
                 // Now send the JSON string (using .dump() to serialize it)
                 ws.send_text(msg.dump());
         });
-	// Start the PostgreSQL listener in a separate thread.
-    	std::thread pg_listener(listen_notifications);
-    	// Start Crow asynchronously (not .run(), but .run_async())
-    	app.bindaddr("0.0.0.0").port(8080).multithreaded().run_async();
-    	// Wait for shutdown signal
-    	while (!shutdown_requested) {
-     		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    	}
-    	// Stop the Crow server gracefully
-    	app.stop();
-    	pg_listener.join();
-    	return 0;
 }
