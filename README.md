@@ -6,7 +6,7 @@ The alpha-strike.space Application Programmer Interface development file. Mostly
 ## Prerequisites
 
 - **Compiler:** GCC (>= 10) or Clang (>= 11)
-- **CMake:** >= 3.15
+- **CMake:** >= 3.14
 - **Crow framework** (ensure you use the maintained fork, e.g. [CrowCpp/Crow](https://github.com/CrowCpp/Crow))
 - **Dependencies:** Any dependencies are in the CMakeLists.txt file.
 
