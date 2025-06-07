@@ -54,6 +54,11 @@ For POST requests with JSON:
 curl -X POST -H "Content-Type: application/json" -d '{"key":"value"}' http://localhost:8080/endpoint
 ```
 
+For Websocket connections:
+```sh
+wscat -c ws://localhost/endpoint
+```
+
 ## Example Endpoints
 
 | Method | Path                | Description        |
@@ -61,7 +66,15 @@ curl -X POST -H "Content-Type: application/json" -d '{"key":"value"}' http://loc
 | GET    | /health             | Health check       |
 | POST   | /endpoint           | Example resource   |
 
-> Replace with your actual endpoints.
+> Replace with actual endpoints.
+
+## Example Websocket
+
+| Path                | Description        |
+|---------------------|--------------------|
+| /mails              | Incidents          |
+
+> Replace with actual websocket.
 
 ## Troubleshooting
 
