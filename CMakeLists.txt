@@ -1,6 +1,6 @@
 # Minimum Version for CMAKE. This file was generally used for the containerized version of the application programmer interface.
 # You may reference https://github.com/kandrsn99/Docker-PostgreSQL-and-Crow-API for how that might be set up.
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(CrowApp) # Create the Project
 # Crow makes usage of C++ 17 Standards.
 set(CMAKE_CXX_STANDARD 17)
@@ -11,7 +11,7 @@ include(FetchContent)
 FetchContent_Declare(
   asio
   GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git # https://github.com/boostorg/asio.git
-  GIT_TAG master  # Master tag on github. Choose your favorite tag.
+  GIT_TAG master  # Specification for release or commit tag from the repository.
 )
 FetchContent_MakeAvailable(asio)
 # We have to set the directory, otherwise crow won't have a file to find for building. We also set the flag to set up.
@@ -22,7 +22,7 @@ include_directories(${ASIO_INCLUDE_DIR})
 FetchContent_Declare(
   crow
   GIT_REPOSITORY https://github.com/CrowCpp/Crow.git
-  GIT_TAG master  # Specification for release or commit tag from the repository.
+  GIT_TAG v1.2.1.2  # Specification for release or commit tag from the repository.
 )
 FetchContent_MakeAvailable(crow)
 # Create the target library alias for crow when it is linked later for server.cpp file.
@@ -35,7 +35,7 @@ endif()
 FetchContent_Declare(
   libpqxx
   GIT_REPOSITORY https://github.com/jtv/libpqxx.git
-  GIT_TAG master # Master tag on github. Choose your favorite tag.
+  GIT_TAG v7.8.1 # Specification for release or commit tag from the repository.
 )
 FetchContent_MakeAvailable(libpqxx)
 # If we recieved pqxx_static we create an alias for when pqxx is linked later for server.cpp file.
@@ -50,17 +50,35 @@ endif()
 FetchContent_Declare(
   nlohmann_json
   GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.12.0  # Updated to a newer version that's compatible with modern CMake
+  GIT_TAG v3.12.0  # Specification for release or commit tag from the repository.
 )
 FetchContent_MakeAvailable(nlohmann_json)
-# Find PostgreSQL
+# Add your source files here (update this list as needed)
+set(SOURCES
+    Server.cpp
+    Routes.cpp
+    pgListener.cpp
+    Serializer.cpp
+)
+# Put together
+add_executable(server ${SOURCES})
+# Includes from dependencies
+target_include_directories(server PRIVATE
+    ${crow_SOURCE_DIR}/include
+    ${nlohmann_json_SOURCE_DIR}/single_include
+    ${libpqxx_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PostgreSQL_INCLUDE_DIRS}
+)
+# Target libraries.
+target_link_libraries(server
+    PRIVATE
+        nlohmann_json::nlohmann_json
+        pqxx
+        Threads
+        ${PostgreSQL_LIBRARIES}
+)
+# If you need to link libpq (PostgreSQL client library), which is required for libpqxx
 find_package(PostgreSQL REQUIRED)
-# Add the cpp file and subsequent executable.
-add_executable(server server.cpp)
-# Link libpqxx to PostgreSQL, a C dependency.
-target_link_libraries(server PRIVATE pqxx::pqxx ${PostgreSQL_LIBRARIES})
-target_include_directories(server PRIVATE ${PostgreSQL_INCLUDE_DIRS})
-# Thread support for crow (multithreading).
-find_package(Threads REQUIRED)
-# Target libraries during the build and link.
-target_link_libraries(server PRIVATE crow::crow pqxx::pqxx Threads::Threads nlohmann_json::nlohmann_json)
+target_include_directories(api_server PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+target_link_libraries(api_server PRIVATE ${PostgreSQL_LIBRARIES})
