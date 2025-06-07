@@ -4,13 +4,6 @@
 #include <iostream>
 // Health route and all HTTP API routes here
 void setupRoutes(crow::SimpleApp& app) {
-	// Register signal handlers for graceful shutdown
-    	signal(SIGINT, signal_handler);
-    	signal(SIGTERM, signal_handler);
-        // Log everything
-        crow::logger::setLogLevel(crow::LogLevel::Debug);
-        // Create the crow application
-        crow::SimpleApp app;
         // Get server health
         CROW_ROUTE(app, "/health").methods("GET"_method)([]() {
                 // Create response value.
