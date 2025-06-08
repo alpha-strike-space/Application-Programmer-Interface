@@ -80,5 +80,5 @@ target_link_libraries(server
 )
 # If you need to link libpq (PostgreSQL client library), which is required for libpqxx
 find_package(PostgreSQL REQUIRED)
-target_include_directories(api_server PRIVATE ${PostgreSQL_INCLUDE_DIRS})
-target_link_libraries(api_server PRIVATE ${PostgreSQL_LIBRARIES})
+target_include_directories(server PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+target_link_libraries(server PRIVATE ${PostgreSQL_LIBRARIES})
