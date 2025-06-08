@@ -1,6 +1,6 @@
 #pragma once
 #include "crow.h"
-# Functions for CROW_ROUTE and CROW_WEBSOCKET_ROUTE
+// Functions for CROW_ROUTE and CROW_WEBSOCKET_ROUTE
 void setupRoutes(crow::SimpleApp& app);
 void setupWebSocket(crow::SimpleApp& app);
 // Extern to make global variables for the websocket.
