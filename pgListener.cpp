@@ -6,6 +6,27 @@
 #include <thread>
 #include <iostream>
 #include "Routes.h" // for ws_connections and ws_mutex
+#include <cstdlib> // For getenv
+#include <string>
+
+// Helper function to build the connection string
+std::string get_listener_connection_string() {
+    const char* dbname = std::getenv("POSTGRES_DB");
+    const char* user = std::getenv("POSTGRES_USER");
+    const char* password = std::getenv("POSTGRES_PASSWORD");
+    const char* host = std::getenv("POSTGRES_HOST");
+    const char* port = std::getenv("POSTGRES_PORT");
+
+    if (!dbname || !user || !password || !host || !port) {
+        throw std::runtime_error("Database environment variables are not set for listener. Please check your .env file.");
+    }
+
+    return "dbname=" + std::string(dbname) +
+           " user=" + std::string(user) +
+           " password=" + std::string(password) +
+           " host=" + std::string(host) +
+           " port=" + std::string(port);
+}   
 
 class NotifyListener : public pqxx::notification_receiver {
 public:
@@ -27,7 +48,7 @@ public:
         filtered_json["killer_name"] = parsed_json["killer_name"];
         filtered_json["time_stamp"] = parsed_json["time_stamp"];
         filtered_json["solar_system_id"] = parsed_json["solar_system_id"];
-        pqxx::connection conn(/* "dbname= user= password= host= port=" */);
+        pqxx::connection conn(get_listener_connection_string());
         pqxx::work txn(conn);
         std::string query = "SELECT solar_system_name FROM systems WHERE solar_system_id::text ILIKE $1;";
         std::string solar_system_id_str = filtered_json["solar_system_id"].is_number_integer() 
@@ -44,7 +65,7 @@ public:
 void listen_notifications() {
     while (!shutdown_requested) {
         try {
-            pqxx::connection conn(/* "dbname= user= password= host= port=" */);
+            pqxx::connection conn(get_listener_connection_string());
             NotifyListener listener(conn, "incident_trigger");
             {
                 pqxx::work txn(conn);
