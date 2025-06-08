@@ -27,14 +27,25 @@ cmake ..
 make
 ```
 
+> **macOS Users:** The standard build process may require extra steps. Please see the detailed **[macOS Build Guide](BUILD_MACOS.md)** for specific instructions.
+
 ## Running the API
 
+To run the server, you must provide the following environment variables so it can connect to the PostgreSQL database:
+
+- `POSTGRES_DB`: The name of your database.
+- `POSTGRES_USER`: Your PostgreSQL username.
+- `POSTGRES_PASSWORD`: Your PostgreSQL password.
+- `POSTGRES_HOST`: The database server address (e.g., `localhost`).
+- `POSTGRES_PORT`: The port the database is running on (e.g., `5432`).
+
+You can set these variables in-line when you execute the binary. From the project root, run:
 ```sh
-# From the build directory (or wherever your binary is output)
-./api_binary
+# Replace placeholder values with your credentials
+POSTGRES_DB=your_db POSTGRES_USER=your_user POSTGRES_PASSWORD=your_pass POSTGRES_HOST=localhost POSTGRES_PORT=5432 ./build/server
 ```
 
-- The default port is usually `8080` (check your main.cpp or config).
+- The default application port is usually `8080` (check your `Server.cpp` or config).
 - On BSD, replace `make` with `gmake` if necessary.
 
 ## Testing Endpoints Locally
