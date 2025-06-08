@@ -43,7 +43,7 @@ endif()
 FetchContent_Declare(
   libpqxx
   GIT_REPOSITORY https://github.com/jtv/libpqxx.git
-  GIT_TAG v7.8.1 # Specification for release or commit tag from the repository.
+  GIT_TAG 7.8.1 # Specification for release or commit tag from the repository.
 )
 FetchContent_MakeAvailable(libpqxx)
 
