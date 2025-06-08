@@ -4,14 +4,11 @@ This guide provides step-by-step instructions for building and running the appli
 
 ## 1. Prerequisites: Install Dependencies
 
-You will need to install a compiler and the necessary PostgreSQL libraries. We will use GCC from Homebrew, as it can sometimes be more compatible than the default Apple Clang for certain C++ projects.
+You will need to install the necessary PostgreSQL C client library (`libpq`).
 
-Open your terminal and run the following commands:
+Open your terminal and run the following command:
 
 ```bash
-# Install GCC for the C and C++ compilers
-brew install gcc
-
 # Install the PostgreSQL client libraries (libpq)
 brew install libpq
 ```
@@ -22,15 +19,11 @@ After installation, `libpq` is usually located at `/opt/homebrew/opt/libpq`. We 
 
 We have prepared a single command that cleans any previous build artifacts, configures the project with CMake, and compiles the source code.
 
-This command explicitly tells CMake to use the GCC compiler you just installed and points it to the correct location for the PostgreSQL libraries.
-
-**Note:** You may need to replace `gcc-15` and `g++-15` with the version of GCC you have installed. You can find your version by running `ls /opt/homebrew/bin | grep g++`.
+This command points CMake to the correct location for the PostgreSQL libraries you just installed.
 
 ```bash
 rm -rf build && mkdir build && cd build && \
 cmake .. \
-  -DCMAKE_C_COMPILER=gcc-15 \
-  -DCMAKE_CXX_COMPILER=g++-15 \
   -DPostgreSQL_ROOT=/opt/homebrew/opt/libpq \
   -DPostgreSQL_LIBRARY=/opt/homebrew/opt/libpq/lib/libpq.dylib \
   -DPostgreSQL_INCLUDE_DIR=/opt/homebrew/opt/libpq/include && \
