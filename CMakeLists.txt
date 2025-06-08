@@ -43,7 +43,10 @@ endif()
 FetchContent_Declare(
   libpqxx
   GIT_REPOSITORY https://github.com/jtv/libpqxx.git
-  GIT_TAG 7.8.1 # Specification for release or commit tag from the repository.
+  GIT_TAG 7.10.1 # Specification for release or commit tag from the repository.
+  CMAKE_ARGS
+    "-DPostgreSQL_INCLUDE_DIR=${PostgreSQL_INCLUDE_DIR}"
+    "-DPostgreSQL_LIBRARY=${PostgreSQL_LIBRARY}"
 )
 FetchContent_MakeAvailable(libpqxx)
 
