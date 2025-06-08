@@ -67,3 +67,6 @@ target_include_directories(server PRIVATE ${PostgreSQL_INCLUDE_DIRS})
 find_package(Threads REQUIRED)
 # Target libraries during the build and link.
 target_link_libraries(server PRIVATE crow::crow pqxx::pqxx Threads::Threads nlohmann_json::nlohmann_json)
+
+# Add include directories for nlohmann_json
+target_include_directories(server PRIVATE ${nlohmann_json_SOURCE_DIR}/include)

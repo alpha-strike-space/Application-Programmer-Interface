@@ -15,6 +15,8 @@
 #include "dotenv.h"
 #include <cstdlib>
 
+using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 using namespace dotenv;
 
 std::string make_conn_str();
