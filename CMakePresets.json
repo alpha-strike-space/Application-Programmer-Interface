@@ -1,0 +1,39 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default Config",
+            "description": "Default build using Unix Makefiles",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build"
+        },
+        {
+            "name": "macos",
+            "displayName": "macOS Config",
+            "description": "macOS-specific build configuration",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "cacheVariables": {
+                "PostgreSQL_ROOT": "/opt/homebrew/opt/libpq",
+                "PostgreSQL_LIBRARY": "/opt/homebrew/opt/libpq/lib/libpq.dylib",
+                "PostgreSQL_INCLUDE_DIR": "/opt/homebrew/opt/libpq/include"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default"
+        },
+        {
+            "name": "macos",
+            "configurePreset": "macos"
+        }
+    ]
+} 
