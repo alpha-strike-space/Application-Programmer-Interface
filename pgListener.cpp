@@ -11,11 +11,11 @@
 
 // Direct Connection
 std::string get_direct_connection_string() {
-    const char* dbname = std::getenv("DIRECT_POSTGRES_DB");
-    const char* user = std::getenv("DIRECT_POSTGRES_USER");
-    const char* password = std::getenv("DIRECT_POSTGRES_PASSWORD");
-    const char* host = std::getenv("DIRECT_POSTGRES_HOST");
-    const char* port = std::getenv("DIRECT_POSTGRES_PORT");
+    const char* dbname = std::getenv("PGDIRECT_DB");
+    const char* user = std::getenv("PGDIRECT_USER");
+    const char* password = std::getenv("PGDIRECT_PASSWORD");
+    const char* host = std::getenv("PGDIRECT_HOST");
+    const char* port = std::getenv("PGDIRECT_PORT");
 
     if (!dbname || !user || !password || !host || !port) {
         throw std::runtime_error("Database environment variables are not set for listener. Please check your .env file.");
@@ -29,11 +29,11 @@ std::string get_direct_connection_string() {
 }
 // Pooled Connection
 std::string get_pool_connection_string() {
-    const char* dbname = std::getenv("POOL_POSTGRES_DB");
-    const char* user = std::getenv("POOL_POSTGRES_USER");
-    const char* password = std::getenv("POOL_POSTGRES_PASSWORD");
-    const char* host = std::getenv("POOL_POSTGRES_HOST");
-    const char* port = std::getenv("POOL_POSTGRES_PORT");
+    const char* dbname = std::getenv("PGBOUNCER_DB");
+    const char* user = std::getenv("PGBOUNCER_USER");
+    const char* password = std::getenv("PGBOUNCER_PASSWORD");
+    const char* host = std::getenv("PGBOUNCER_HOST");
+    const char* port = std::getenv("PGBOUNCER_PORT");
 
     if (!dbname || !user || !password || !host || !port) {
         throw std::runtime_error("Database environment variables are not set for listener. Please check your .env file.");
