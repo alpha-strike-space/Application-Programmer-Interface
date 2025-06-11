@@ -6,7 +6,7 @@
 #include <cstdlib> // For getenv
 #include <string>
 // Pooled Connection
-std::string get_pooled_string() {
+std::string get_pool_connection_string() {
     const char* dbname = std::getenv("PGBOUNCER_DB");
     const char* user = std::getenv("PGBOUNCER_USER");
     const char* password = std::getenv("PGBOUNCER_PASSWORD");
