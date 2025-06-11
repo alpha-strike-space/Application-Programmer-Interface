@@ -27,24 +27,6 @@ std::string get_direct_connection_string() {
            " host=" + std::string(host) +
            " port=" + std::string(port);
 }
-// Pooled Connection
-std::string get_pool_connection_string() {
-    const char* dbname = std::getenv("PGBOUNCER_DB");
-    const char* user = std::getenv("PGBOUNCER_USER");
-    const char* password = std::getenv("PGBOUNCER_PASSWORD");
-    const char* host = std::getenv("PGBOUNCER_HOST");
-    const char* port = std::getenv("PGBOUNCER_PORT");
-
-    if (!dbname || !user || !password || !host || !port) {
-        throw std::runtime_error("Database environment variables are not set for listener. Please check your .env file.");
-    }
-
-    return "dbname=" + std::string(dbname) +
-           " user=" + std::string(user) +
-           " password=" + std::string(password) +
-           " host=" + std::string(host) +
-           " port=" + std::string(port);
-}   
 
 class NotifyListener : public pqxx::notification_receiver {
 public:
