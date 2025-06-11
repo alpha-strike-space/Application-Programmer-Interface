@@ -37,7 +37,7 @@ void setupRoutes(crow::SimpleApp& app) {
                 // Get Method
                 if(req.method == crow::HTTPMethod::Get) {
                         try {
-                                pqxx::connection conn{get_connection_string()};
+                                pqxx::connection conn{get_pool_connection_string()};
                                 pqxx::work txn(conn);
                                 pqxx::result res;
                                 // Check for the parameters by initializing a pointer for the url sent.
@@ -94,7 +94,7 @@ void setupRoutes(crow::SimpleApp& app) {
 		// Try user input.
 		try {
                                 // Get your PostgreSQL connection
-                                pqxx::connection conn{get_connection_string()};
+                                pqxx::connection conn{get_pool_connection_string()};
                                 pqxx::work txn(conn);
                                 pqxx::result res;
 				pqxx::result resKillers;
@@ -247,9 +247,9 @@ void setupRoutes(crow::SimpleApp& app) {
     					qSystems += " GROUP BY s.solar_system_id, s.solar_system_name "
                 				" ORDER BY incident_count DESC LIMIT 10;";
 					// Optionally, log or print the queries.
-    					std::cout << "Killers Query: " << qKillers << std::endl;
-    					std::cout << "Victims Query: " << qVictims << std::endl;
-    					std::cout << "Systems Query: " << qSystems << std::endl;
+    					//std::cout << "Killers Query: " << qKillers << std::endl;
+    					//std::cout << "Victims Query: " << qVictims << std::endl;
+    					//std::cout << "Systems Query: " << qSystems << std::endl;
 					// Execute the queries.
     					resKillers = txn.exec(qKillers);
    	 				resVictims = txn.exec(qVictims);
@@ -284,7 +284,7 @@ void setupRoutes(crow::SimpleApp& app) {
                 if(req.method == crow::HTTPMethod::Get) {
                         try {
                                 // Get your PostgreSQL connection
-                                pqxx::connection conn{get_connection_string()};
+                                pqxx::connection conn{get_pool_connection_string()};
                                 pqxx::work txn(conn);
                                 pqxx::result res;
                                 // Check for the parameters by initializing a pointer for the url sent.
