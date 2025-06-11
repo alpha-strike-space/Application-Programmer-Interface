@@ -118,15 +118,15 @@ void setupRoutes(crow::SimpleApp& app) {
 					// Create string to hold passed value.
         				std::string filterStr = filter_param;
 					// Check our filter value.
-        				if (filterStr == "day") {
-            					return "to_timestamp((i.time_stamp - 116444736000000000) / 10000000.0) >= now() - interval '24 hours'";
-        				} else if (filterStr == "week") {
-            					return "to_timestamp((i.time_stamp - 116444736000000000) / 10000000.0) >= now() - interval '7 days'";
-        				} else if (filterStr == "month") {
-            					return "to_timestamp((i.time_stamp - 116444736000000000) / 10000000.0) >= now() - interval '1 month'";
-        				} else {
-						return "";
-					}
+           	 			if (filterStr == "day") {
+        					return "i.time_stamp >= extract(epoch from now() - interval '24 hours')";
+    					} else if (filterStr == "week") {
+        					return "i.time_stamp >= extract(epoch from now() - interval '7 days')";
+    					} else if (filterStr == "month") {
+       	 					return "i.time_stamp >= extract(epoch from now() - interval '1 month')";
+    					} else {
+        					return "";
+    					}
     				};
 				// Check the parameters every time we are called up.
                                 if(name_parameter) {
@@ -138,11 +138,11 @@ void setupRoutes(crow::SimpleApp& app) {
 						// Base query
 						std::string baseQuery = "WITH combined AS ("
     									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
-    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    								    	"         time_stamp AS event_time "
     									"  FROM incident i "
     									"  UNION ALL "
     									"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
-    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    									"         time_stamp AS event_time "
     									"  FROM incident i "
     									") "
     									"SELECT person, "
@@ -166,11 +166,11 @@ void setupRoutes(crow::SimpleApp& app) {
 						// Base query
 						std::string baseQuery = "WITH combined AS ("
     									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
-    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    									"         time_stamp AS event_time "
     									"  FROM incident i "
     									"  UNION ALL "
     									"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
-    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    									"         time_stamp AS event_time "
     									"  FROM incident i "
     									") "
     									"SELECT person, "
@@ -354,16 +354,16 @@ void setupRoutes(crow::SimpleApp& app) {
 					// Create string to hold passed value.
         				std::string filterStr = filter_param;
 					// Check our filter value.
-        				if (filterStr == "day") {
-            					return "to_timestamp((i.time_stamp - 116444736000000000) / 10000000.0) >= now() - interval '24 hours'";
-        				} else if (filterStr == "week") {
-            					return "to_timestamp((i.time_stamp - 116444736000000000) / 10000000.0) >= now() - interval '7 days'";
-        				} else if (filterStr == "month") {
-            					return "to_timestamp((i.time_stamp - 116444736000000000) / 10000000.0) >= now() - interval '1 month'";
-        				} else {
-						return "";
-					}
-    				};
+    					if (filterStr == "day") {
+        					return "i.time_stamp >= extract(epoch from now() - interval '24 hours')";
+    					} else if (filterStr == "week") {
+        					return "i.time_stamp >= extract(epoch from now() - interval '7 days')";
+    					} else if (filterStr == "month") {
+        					return "i.time_stamp >= extract(epoch from now() - interval '1 month')";
+    					} else {
+        					return "";
+    					}
+				};
                                 // Check the parameters every time we are called up.
                                 if(name_parameter) {
                                         // Parse our search value name parameter.
