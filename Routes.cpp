@@ -214,7 +214,7 @@ void setupRoutes(crow::SimpleApp& app) {
                                 } else {
 					// Work with the filter.
                                         std::string timeClause = getTimeClause(filter_parameter);
-                                        // Base query for the Top Ten Killers
+                                        // Base query for the Top Killers
     					// Count rows per killer_name using the provided time filter.
     					std::string qKillers = "SELECT killer_name AS name, COUNT(*) AS incident_count "
         						"FROM incident i "
@@ -225,7 +225,7 @@ void setupRoutes(crow::SimpleApp& app) {
     					}
     					qKillers += " GROUP BY killer_name "
                 				" ORDER BY incident_count;";
-					// Base query for the Top Ten Victims ---
+					// Base query for the Top Victims ---
     					std::string qVictims = "SELECT victim_name AS name, COUNT(*) AS incident_count "
 							"FROM incident i "
 							"WHERE victim_name <> '' ";  // ensure a valid name
@@ -235,7 +235,7 @@ void setupRoutes(crow::SimpleApp& app) {
     					}
     					qVictims += " GROUP BY victim_name "
                 				" ORDER BY incident_count DESC;";
-    					// base query for the Top Ten Systems
+    					// base query for the Top Systems
     					// Retrieve solar_system info by joining incident and systems tables.
     					std::string qSystems = "SELECT s.solar_system_id, s.solar_system_name, COUNT(*) AS incident_count "
         						"FROM incident i "
