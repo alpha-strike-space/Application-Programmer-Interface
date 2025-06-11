@@ -164,27 +164,20 @@ void setupRoutes(crow::SimpleApp& app) {
 						// Work with the filter.
 						std::string timeClause = getTimeClause(filter_parameter);
 						// Base query
-						std::string baseQuery = "WITH combined AS ("
-    									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
-    									"         i.time_stamp "
-    									"  FROM incident i "
-    									"  UNION ALL "
-    									"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
-    									"         i.time_stamp "
-    									"  FROM incident i "
-    									") "
-    									"SELECT person, "
-    									"       SUM(kill_count) AS total_kills, "
-    									"       SUM(loss_count) AS total_losses "
-    									"FROM combined ";
-						// Empty query string.
-						std::string query;
-						// Append filters.
-						if (!timeClause.empty()) {
-   							baseQuery += "WHERE " + timeClause + " ";
-						}
-						// Build query
-						query = baseQuery + "GROUP BY person ORDER BY total_kills DESC";
+						std::string query = "WITH combined AS ("
+    							"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, i.time_stamp "
+    							"  FROM incident i " +
+    							(timeClause.empty() ? "" : "WHERE " + timeClause + " ") +
+    							"  UNION ALL "
+    							"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, i.time_stamp "
+    							"  FROM incident i " +
+							(timeClause.empty() ? "" : "WHERE " + timeClause + " ") +
+    							") "
+    							"SELECT person, "
+    							"       SUM(kill_count) AS total_kills, "
+    							"       SUM(loss_count) AS total_losses "
+   	 						"FROM combined "
+    							"GROUP BY person ORDER BY total_kills DESC";
 						// Run the query (no exec_params needed since no placeholders)
 						res = txn.exec(query);
 					}
