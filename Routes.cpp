@@ -5,6 +5,24 @@
 #include <nlohmann/json.hpp>
 #include <cstdlib> // For getenv
 #include <string>
+// Pooled Connection
+std::string get_pooled_string() {
+    const char* dbname = std::getenv("PGBOUNCER_DB");
+    const char* user = std::getenv("PGBOUNCER_USER");
+    const char* password = std::getenv("PGBOUNCER_PASSWORD");
+    const char* host = std::getenv("PGBOUNCER_HOST");
+    const char* port = std::getenv("PGBOUNCER_PORT");
+
+    if (!dbname || !user || !password || !host || !port) {
+        throw std::runtime_error("Database environment variables are not set. Please check your .env file.");
+    }
+
+    return "dbname=" + std::string(dbname) +
+           " user=" + std::string(user) +
+           " password=" + std::string(password) +
+           " host=" + std::string(host) +
+           " port=" + std::string(port);
+}
 // Health route and all HTTP API routes here
 void setupRoutes(crow::SimpleApp& app) {
         // Get server health
@@ -512,23 +530,4 @@ void setupWebSocket(crow::SimpleApp& app) {
                 // Now send the JSON string (using .dump() to serialize it)
                 ws.send_text(msg.dump());
         });
-}
-
-// Helper function to build the connection string
-std::string get_connection_string() {
-    const char* dbname = std::getenv("POSTGRES_DB");
-    const char* user = std::getenv("POSTGRES_USER");
-    const char* password = std::getenv("POSTGRES_PASSWORD");
-    const char* host = std::getenv("POSTGRES_HOST");
-    const char* port = std::getenv("POSTGRES_PORT");
-
-    if (!dbname || !user || !password || !host || !port) {
-        throw std::runtime_error("Database environment variables are not set. Please check your .env file.");
-    }
-
-    return "dbname=" + std::string(dbname) +
-           " user=" + std::string(user) +
-           " password=" + std::string(password) +
-           " host=" + std::string(host) +
-           " port=" + std::string(port);
 }
