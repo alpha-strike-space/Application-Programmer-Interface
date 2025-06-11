@@ -119,11 +119,11 @@ void setupRoutes(crow::SimpleApp& app) {
         				std::string filterStr = filter_param;
 					// Check our filter value.
            	 			if (filterStr == "day") {
-        					return "event_time >= extract(epoch from now() - interval '24 hours')";
+        					return "i.time_stamp >= extract(epoch from now() - interval '24 hours')";
     					} else if (filterStr == "week") {
-        					return "event_time >= extract(epoch from now() - interval '7 days')";
+        					return "i.time_stamp >= extract(epoch from now() - interval '7 days')";
     					} else if (filterStr == "month") {
-       	 					return "event_time >= extract(epoch from now() - interval '1 month')";
+       	 					return "i.time_stamp >= extract(epoch from now() - interval '1 month')";
     					} else {
         					return "";
     					}
@@ -138,11 +138,11 @@ void setupRoutes(crow::SimpleApp& app) {
 						// Base query
 						std::string baseQuery = "WITH combined AS ("
     									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
-    								    	"         i.time_stamp AS event_time "
+    								    	"         i.time_stamp "
     									"  FROM incident i "
     									"  UNION ALL "
     									"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
-    									"         i.time_stamp AS event_time "
+    									"         i.time_stamp "
     									"  FROM incident i "
     									") "
     									"SELECT person, "
@@ -166,11 +166,11 @@ void setupRoutes(crow::SimpleApp& app) {
 						// Base query
 						std::string baseQuery = "WITH combined AS ("
     									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
-    									"         i.time_stamp AS event_time "
+    									"         i.time_stamp "
     									"  FROM incident i "
     									"  UNION ALL "
     									"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
-    									"         i.time_stamp AS event_time "
+    									"         i.time_stamp "
     									"  FROM incident i "
     									") "
     									"SELECT person, "
