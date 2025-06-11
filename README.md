@@ -31,21 +31,21 @@ make
 
 ## Running the API
 
-To run the server, you must provide the following environment variables so it can connect to the PostgreSQL database:
+Please make a visit to https://github.com/alpha-strike-space/PostgreSQL-Configuration if you have any questions regarding how the database tables are set up. Now, to run this server in development or production, you must provide the following environment variables so it can connect to the PostgreSQL database:
 
 ### PgBouncer (for Routes.cpp and pooled queries in pgListener.cpp)
 - `PGBOUNCER_HOST`: Name of Bouncer Service
 - `PGBOUNCER_PORT`: Typically, port 6432
 - `PGBOUNCER_DB`: DB name
 - `PGBOUNCER_USER`: DB user
-- `PGBOUNCER_PASSWORD`: DB user password, see https://github.com/alpha-strike-space/PostgreSQL-Configuration
+- `PGBOUNCER_PASSWORD`: DB user password
   
 ### PostgreSQL Direct (for LISTEN/NOTIFY in pgListener.cpp)
 - `PGDIRECT_HOST`: Name of PG Service
 - `PGDIRECT_PORT`: Typically, port 5432
 - `PGDIRECT_DB`: DB name
 - `PGDIRECT_USER`: DB user
-- `PGDIRECT_PASSWORD`: DB user password, see https://github.com/alpha-strike-space/PostgreSQL-Configuration
+- `PGDIRECT_PASSWORD`: DB user password
 
 You can set these variables in-line when you execute the binary from the project root. Many different ways these variables may be declared. Best practice in run-time is to load them not from a .env file. Although, this is perfectly fine for development.
 
