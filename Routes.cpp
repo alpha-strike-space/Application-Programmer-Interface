@@ -272,7 +272,7 @@ void setupRoutes(crow::SimpleApp& app) {
         					qKillers += " AND " + timeClause;
     					}
     					qKillers += " GROUP BY killer_name "
-                				" ORDER BY incident_count;";
+                				" ORDER BY incident_count DESC LIMIT 10;";
 					// Base query for the Top Victims ---
     					std::string qVictims = "SELECT victim_name AS name, COUNT(*) AS incident_count "
 							"FROM incident i "
@@ -282,7 +282,7 @@ void setupRoutes(crow::SimpleApp& app) {
         					qVictims += " AND " + timeClause;
     					}
     					qVictims += " GROUP BY victim_name "
-                				" ORDER BY incident_count DESC;";
+                				" ORDER BY incident_count DESC LIMIT 10;";
     					// base query for the Top Systems
     					// Retrieve solar_system info by joining incident and systems tables.
     					std::string qSystems = "SELECT s.solar_system_id, s.solar_system_name, COUNT(*) AS incident_count "
@@ -293,7 +293,7 @@ void setupRoutes(crow::SimpleApp& app) {
         					qSystems += " WHERE " + timeClause;
     					}
     					qSystems += " GROUP BY s.solar_system_id, s.solar_system_name "
-                				" ORDER BY incident_count DESC;";
+                				" ORDER BY incident_count DESC LIMIT 10;";
 					// Optionally, log or print the queries.
     					//std::cout << "Killers Query: " << qKillers << std::endl;
     					//std::cout << "Victims Query: " << qVictims << std::endl;
