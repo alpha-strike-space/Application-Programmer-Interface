@@ -119,11 +119,11 @@ void setupRoutes(crow::SimpleApp& app) {
         				std::string filterStr = filter_param;
 					// Check our filter value.
            	 			if (filterStr == "day") {
-        					return "i.time_stamp >= extract(epoch from now() - interval '24 hours')";
+        					return "event_time >= extract(epoch from now() - interval '24 hours')";
     					} else if (filterStr == "week") {
-        					return "i.time_stamp >= extract(epoch from now() - interval '7 days')";
+        					return "event_time >= extract(epoch from now() - interval '7 days')";
     					} else if (filterStr == "month") {
-       	 					return "i.time_stamp >= extract(epoch from now() - interval '1 month')";
+       	 					return "event_time >= extract(epoch from now() - interval '1 month')";
     					} else {
         					return "";
     					}
