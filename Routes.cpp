@@ -130,35 +130,64 @@ void setupRoutes(crow::SimpleApp& app) {
     				};
 				// Check the parameters every time we are called up.
                                 if(name_parameter) {
-                                        // Parse our search value name parameter.
-                                        std::string searchPattern = buildSearchPattern(name_parameter);
-					// Work with the filter.
-					std::string timeClause = getTimeClause(filter_parameter);
-					// Base query
-					std::string baseQuery = "WITH combined AS ("
-    								"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
-    								"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
-    								"  FROM incident i "
-    								"  UNION ALL "
-    								"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
-    								"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
-    								"  FROM incident i "
-    								") "
-    								"SELECT person, "
-    								"       SUM(kill_count) AS total_kills, "
-    								"       SUM(loss_count) AS total_losses "
-    								"FROM combined "
-    								"WHERE person LIKE $1 ";  //The parameter placeholder for our name search.;
-					// Empty query string.
-					std::string query;
-					// Append filters
-					if (!timeClause.empty()) {
-    						baseQuery += "AND " + timeClause + " ";
+					if(name_parameter && std::string(name_parameter).size() > 0) {
+	                                	// Parse our search value name parameter.
+                                        	std::string searchPattern = buildSearchPattern(name_parameter);
+						// Work with the filter.
+						std::string timeClause = getTimeClause(filter_parameter);
+						// Base query
+						std::string baseQuery = "WITH combined AS ("
+    									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
+    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    									"  FROM incident i "
+    									"  UNION ALL "
+    									"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
+    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    									"  FROM incident i "
+    									") "
+    									"SELECT person, "
+    									"       SUM(kill_count) AS total_kills, "
+    									"       SUM(loss_count) AS total_losses "
+    									"FROM combined "
+    									"WHERE person LIKE $1 ";  //The parameter placeholder for our name search.;
+						// Empty query string.
+						std::string query;
+						// Append filters
+						if (!timeClause.empty()) {
+    							baseQuery += "AND " + timeClause + " ";
+						}
+						query = baseQuery + "GROUP BY person;";
+						//std::cout << query << std::endl;
+                                        	// Prepare SQL call.
+                                        	res = txn.exec_params(query, searchPattern);
+					} else {
+						// Work with the filter.
+						std::string timeClause = getTimeClause(filter_parameter);
+						// Base query
+						std::string baseQuery = "WITH combined AS ("
+    									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
+    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    									"  FROM incident i "
+    									"  UNION ALL "
+    									"  SELECT victim_name AS person, 0 AS kill_count, 1 AS loss_count, "
+    									"         to_timestamp((time_stamp - 116444736000000000) / 10000000.0) AS event_time "
+    									"  FROM incident i "
+    									") "
+    									"SELECT person, "
+    									"       SUM(kill_count) AS total_kills, "
+    									"       SUM(loss_count) AS total_losses "
+    									"FROM combined ";
+						// Empty query string.
+						std::string query;
+						// Append filters.
+						if (!timeClause.empty()) {
+   							baseQuery += "WHERE " + timeClause + " ";
+						}
+						// Build query
+						query = baseQuery + "GROUP BY person ORDER BY total_kills DESC";
+						// Run the query (no exec_params needed since no placeholders)
+						res = txn.exec(query);
 					}
-					query = baseQuery + "GROUP BY person;";
-					std::cout << query << std::endl;
-                                        // Prepare SQL call.
-                                        res = txn.exec_params(query, searchPattern);
                                         // Check if query returned any rows.
                                         if (res.size() == 0) {
                                                 crow::json::wvalue error_response;
@@ -174,29 +203,48 @@ void setupRoutes(crow::SimpleApp& app) {
                                 	resp.set_header("Content-Type", "application/json");
                                 	return resp;
                                 } else if(system_parameter) {
-                                        // Convert the string to a 64-bit integer using std::stoll.
-                                        std::string searchPattern = buildSearchPattern(system_parameter);
-                                        // Work with the filter.
-                                        std::string timeClause = getTimeClause(filter_parameter);
-					// Base query that aggregates kill/loss counts per "person"
-    					// and joins with the systems table to include solar_system_name.
-   	 				std::string baseQuery = "SELECT s.solar_system_id, "
-        							"       s.solar_system_name, "
-        							"       COUNT(*) AS incident_count "
-        							"FROM incident i "
-        							"JOIN systems s ON i.solar_system_id = s.solar_system_id "
-        							"WHERE (s.solar_system_id::text ILIKE $1 OR s.solar_system_name ILIKE $1) ";
-					// Empty query string.
-					std::string query;
-					// Append filters
-					if (!timeClause.empty()) {
-        					baseQuery += "AND " + timeClause + " ";
-    					}
-    					query = baseQuery + "GROUP BY s.solar_system_id, s.solar_system_name "
-                 				"ORDER BY s.solar_system_id DESC;";
-					std::cout << query << std::endl;
-                                        // Prepare SQL call.
-                                        res = txn.exec_params(query, searchPattern);
+					if(system_parameter && std::string(system_parameter).size() > 0) {
+                                        	// Convert the string to a 64-bit integer using std::stoll.
+                                        	std::string searchPattern = buildSearchPattern(system_parameter);
+                                        	// Work with the filter.
+                                        	std::string timeClause = getTimeClause(filter_parameter);
+						// Base query that aggregates kill/loss counts per "person"
+    						// and joins with the systems table to include solar_system_name.
+   	 					std::string baseQuery = "SELECT s.solar_system_id, "
+        								"       s.solar_system_name, "
+        								"       COUNT(*) AS incident_count "
+        								"FROM incident i "
+        								"JOIN systems s ON i.solar_system_id = s.solar_system_id "
+        								"WHERE (s.solar_system_id::text ILIKE $1 OR s.solar_system_name ILIKE $1) ";
+						// Empty query string.
+						std::string query;
+						// Append filters
+						if (!timeClause.empty()) {
+        						baseQuery += "AND " + timeClause + " ";
+    						}
+    						query = baseQuery + "GROUP BY s.solar_system_id, s.solar_system_name "
+                 					"ORDER BY s.solar_system_id DESC;";
+						std::cout << query << std::endl;
+                                        	// Prepare SQL call.
+                                       		res = txn.exec_params(query, searchPattern);
+					} else {
+						// Work with the filter.
+						std::string timeClause = getTimeClause(filter_parameter);
+						// Empty query string, with a filter for systems.
+						std::string baseQuery = "SELECT s.solar_system_id, s.solar_system_name, COUNT(*) AS incident_count "
+                        					"FROM incident i "
+                        					"JOIN systems s ON i.solar_system_id = s.solar_system_id";
+						// Empty query string.
+						std::string query;
+						// If getTimeClause returns a non-empty string, add WHERE before it.
+						if (!timeClause.empty()) {
+    							baseQuery += " WHERE " + timeClause + " ";
+						}
+						query = baseQuery + " GROUP BY s.solar_system_id, s.solar_system_name "
+             						"ORDER BY incident_count DESC;";
+						// Prepare SQL call.
+                                       		res = txn.exec(query);
+					}
                                         // Check if query returned any rows.
                                         if (res.size() == 0) {
                                                 crow::json::wvalue error_response;
