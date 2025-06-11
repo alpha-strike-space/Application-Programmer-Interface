@@ -33,17 +33,21 @@ make
 
 To run the server, you must provide the following environment variables so it can connect to the PostgreSQL database:
 
-- `POSTGRES_DB`: The name of your database.
-- `POSTGRES_USER`: Your PostgreSQL username.
-- `POSTGRES_PASSWORD`: Your PostgreSQL password.
-- `POSTGRES_HOST`: The database server address (e.g., `localhost`).
-- `POSTGRES_PORT`: The port the database is running on (e.g., `5432`).
+### PgBouncer (for Routes.cpp and pooled queries in pgListener.cpp)
+- `PGBOUNCER_HOST`: Name of Bouncer Service
+- `PGBOUNCER_PORT`: Typically, port 6432
+- `PGBOUNCER_DB`: DB name
+- `PGBOUNCER_USER`: DB user
+- `PGBOUNCER_PASSWORD`: DB user password, see https://github.com/alpha-strike-space/PostgreSQL-Configuration
+  
+### PostgreSQL Direct (for LISTEN/NOTIFY in pgListener.cpp)
+- `PGDIRECT_HOST`: Name of PG Service
+- `PGDIRECT_PORT`: Typically, port 5432
+- `PGDIRECT_DB`: DB name
+- `PGDIRECT_USER`: DB user
+- `PGDIRECT_PASSWORD`: DB user password, see https://github.com/alpha-strike-space/PostgreSQL-Configuration
 
-You can set these variables in-line when you execute the binary. From the project root, run:
-```sh
-# Replace placeholder values with your credentials
-POSTGRES_DB=your_db POSTGRES_USER=your_user POSTGRES_PASSWORD=your_pass POSTGRES_HOST=localhost POSTGRES_PORT=5432 ./build/server
-```
+You can set these variables in-line when you execute the binary from the project root. Many different ways these variables may be declared. Best practice in run-time is to load them not from a .env file. Although, this is perfectly fine for development.
 
 - The default application port is usually `8080` (check your `Server.cpp` or config).
 - On BSD, replace `make` with `gmake` if necessary.
