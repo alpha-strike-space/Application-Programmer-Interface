@@ -95,7 +95,7 @@ wscat -c ws://localhost/endpoint
 
 - **Port in Use:** If 8080 is in use, change the port in your Server.cpp.
 - **Missing Libraries:** Install dependencies using your OS package manager (e.g., `apt`, `pkg`, or `brew`).
-- **Permission Denied:** Make sure the binary is executable: `chmod +x api_binary`
+- **Permission Denied:** Make sure the binary is executable: `chmod +x server`
 
 ## BSD Notes
 
