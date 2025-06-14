@@ -333,7 +333,11 @@ void setupRoutes(crow::SimpleApp& app) {
                                 const char* system_parameter = req.url_params.get("system"); // system by id or name
 				// Extract the "filter" parameter (e.g., "24h", "week", or "month")
     				const char* filter_parameter = req.url_params.get("filter");
-				const char* mail_parameter = req.url_params.get("mail_id");
+				// Extract mail id for carding on the front end or specific information.
+				int mail_parameter = req.url_params.get("mail_id") ? std::stoi(req.url_params.get("mail_id"));
+				// Extract pagination and offset. This is to reduce front-end overload.
+                                int limit = req.url_params.get("limit") ? std::stoi(req.url_params.get("limit")) : 40;
+                                int offset = req.url_params.get("offset") ? std::stoi(req.url_params.get("offset")) : 0;
 				// Build parameters
                                 // Helper lambda to build search pattern.
                                 auto buildSearchPattern = [](const char* value) -> std::string {
@@ -379,13 +383,13 @@ void setupRoutes(crow::SimpleApp& app) {
 					std::string query;
 					// Append filters
 					if(!timeClause.empty()) {
-   						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC;";
+   						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
 					} else {
-						query = baseQuery + " ORDER BY i.time_stamp DESC;";
+						query = baseQuery + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
 					}
 					//std::cout << query << std::endl;
                                         // Prepare SQL call.
-                                        res = txn.exec_params(query, searchPattern);
+                                        res = txn.exec_params(query, searchPattern, limit, offset);
                                         // Check if query returned any rows.
                                         if (res.size() == 0) {
                                                 crow::json::wvalue error_response;
@@ -413,13 +417,13 @@ void setupRoutes(crow::SimpleApp& app) {
 					std::string query;
 					// Append filters
                                         if(!timeClause.empty()) {
-                                                query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC;";
+                                                query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
                                         } else {
-                                                query = baseQuery + " ORDER BY i.time_stamp DESC;";
+                                                query = baseQuery + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
                                         }
 					//std::cout << query << std::endl;
                                         // Prepare SQL call.
-                                        res = txn.exec_params(query, searchPattern);
+                                        res = txn.exec_params(query, searchPattern, limit, offset);
                                         // Check if query returned any rows.
                                         if (res.size() == 0) {
                                                 crow::json::wvalue error_response;
@@ -427,13 +431,6 @@ void setupRoutes(crow::SimpleApp& app) {
                                                 return crow::response(400, error_response);
                                         }
 				} else if(mail_parameter) {
-                                        // Convert the string to a 64-bit integer using std::stoi.
-                                        int searchPattern;
-    					try {
-       	 					searchPattern = std::stoi(std::string(mail_parameter));
-    					} catch (const std::exception& e) {
-        					return crow::response(400, "Invalid 'id' parameter");
-    					}
 					// Base query.
 					std::string query = "SELECT i.id, COALESCE(i.victim_address, '') AS victim_address, "
                         					"COALESCE(i.victim_name, '') AS victim_name, "
@@ -448,7 +445,7 @@ void setupRoutes(crow::SimpleApp& app) {
 			                        		"WHERE i.id = $1;";
                                         //std::cout << query << std::endl;
                                         // Prepare SQL call.
-                                        res = txn.exec_params(query, searchPattern);
+                                        res = txn.exec_params(query, mail_parameter);
                                         // Check if query returned any rows.
                                         if (res.size() == 0) {
                                                 crow::json::wvalue error_response;
@@ -473,13 +470,13 @@ void setupRoutes(crow::SimpleApp& app) {
 					std::string query;
 					// Append filters
                                         if(!timeClause.empty()) {
-                                                query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC;";
+                                                query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $1 OFFSET $2;";
                                         } else {
-                                                query = baseQuery + " ORDER BY i.time_stamp DESC;";
+                                                query = baseQuery + " ORDER BY i.time_stamp DESC LIMIT $1 OFFSET $2;";
 					}
 					//std::cout << query << std::endl;
 					// Prepare SQL call.
-                                        res = txn.exec(query);
+                                        res = txn.exec_params(query, limit, offset);
 					// Check if query returned any rows.
                                         if (res.size() == 0) {
                                                 crow::json::wvalue error_response;
@@ -488,7 +485,7 @@ void setupRoutes(crow::SimpleApp& app) {
                                         }
                                 } else {
                                         // Base query
-                                        std::string baseQuery = "SELECT i.id, COALESCE(i.victim_address, '') AS victim_address, "
+                                        std::string query = "SELECT i.id, COALESCE(i.victim_address, '') AS victim_address, "
                                                                 "COALESCE(i.victim_name, '') AS victim_name, "
                                                                 "COALESCE(i.killer_address, '') AS killer_address, "
                                                                 "COALESCE(i.killer_name, '') AS killer_name, "
@@ -498,9 +495,9 @@ void setupRoutes(crow::SimpleApp& app) {
                                                                 "i.time_stamp "
                                                                 "FROM incident "
                                                                 "AS i JOIN systems AS s ON i.solar_system_id = s.solar_system_id "
-								"ORDER BY i.time_stamp DESC;";
+								"ORDER BY i.time_stamp DESC LIMIT $1 OFFSET $2;";
                                         // Prepare SQL call.
-                                        res = txn.exec(baseQuery);
+                                        res = txn.exec_params(query, limit, offset);
                                         // Check if query returned any rows.
                                         if (res.size() == 0) {
                                                crow::json::wvalue error_response;
