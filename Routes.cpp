@@ -334,7 +334,7 @@ void setupRoutes(crow::SimpleApp& app) {
 				// Extract the "filter" parameter (e.g., "24h", "week", or "month")
     				const char* filter_parameter = req.url_params.get("filter");
 				// Extract mail id for carding on the front end or specific information.
-				int mail_parameter = req.url_params.get("mail_id") ? std::stoi(req.url_params.get("mail_id"));
+				const char* mail_parameter = req.url_params.get("mail_id");
 				// Extract pagination and offset. This is to reduce front-end overload.
                                 int limit = req.url_params.get("limit") ? std::stoi(req.url_params.get("limit")) : 40;
                                 int offset = req.url_params.get("offset") ? std::stoi(req.url_params.get("offset")) : 0;
@@ -431,6 +431,13 @@ void setupRoutes(crow::SimpleApp& app) {
                                                 return crow::response(400, error_response);
                                         }
 				} else if(mail_parameter) {
+					// Convert the string to a 64-bit integer using std::stoi.
+                                        int searchPattern;
+                                        try {
+                                                searchPattern = std::stoi(std::string(mail_parameter));
+                                        } catch (const std::exception& e) {
+                                                return crow::response(400, "Invalid 'id' parameter");
+                                        }
 					// Base query.
 					std::string query = "SELECT i.id, COALESCE(i.victim_address, '') AS victim_address, "
                         					"COALESCE(i.victim_name, '') AS victim_name, "
@@ -445,7 +452,7 @@ void setupRoutes(crow::SimpleApp& app) {
 			                        		"WHERE i.id = $1;";
                                         //std::cout << query << std::endl;
                                         // Prepare SQL call.
-                                        res = txn.exec_params(query, mail_parameter);
+                                        res = txn.exec_params(query, searchPattern);
                                         // Check if query returned any rows.
                                         if (res.size() == 0) {
                                                 crow::json::wvalue error_response;
@@ -525,7 +532,7 @@ void setupRoutes(crow::SimpleApp& app) {
 			// Specifically for request urls not being integers when the std:stdoi throws an out of range error.
                         } catch (const std::out_of_range& e) {
     				crow::json::wvalue error_response;
-    				error_response["error"] = "Bad Request! Parameter value out of range for mail_id, limit, or offset!";
+    				error_response["error"] = "Bad Request! Parameter value out of range for limit, or offset!";
     				return crow::response(400, error_response);
 			}
                 } else {
