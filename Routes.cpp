@@ -522,7 +522,12 @@ void setupRoutes(crow::SimpleApp& app) {
 				crow::json::wvalue error_response;
 				error_response["error"] = "Internal Server Error!";
                                 return crow::response(500, error_response);
-                        }
+			// Specifically for request urls not being integers when the std:stdoi throws an out of range error.
+                        } catch (const std::out_of_range& e) {
+    				crow::json::wvalue error_response;
+    				error_response["error"] = "Bad Request! Parameter value out of range for mail_id, limit, or offset!";
+    				return crow::response(400, error_response);
+			}
                 } else {
                         // Send error for method issues. This is where our post function will go when the Eve Frontier API is updated.
                         return crow::response(405);
