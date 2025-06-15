@@ -34,23 +34,26 @@ If the command succeeds, you will have a `server` executable inside the `build` 
 
 ## 3. Configure Environment Variables
 
-The server connects to a PostgreSQL database and requires connection details to be set as environment variables. The application will read these variables at runtime.
+Please make a visit to https://github.com/alpha-strike-space/PostgreSQL-Configuration if you have any questions regarding how the database tables are set up. Now, to run this server in development or production, you must provide the following environment variables so it can connect to the PostgreSQL database:
 
-The following variables are required:
-- `POSTGRES_DB`: The name of your database.
-- `POSTGRES_USER`: Your PostgreSQL username.
-- `POSTGRES_PASSWORD`: Your PostgreSQL password.
-- `POSTGRES_HOST`: The database server address (e.g., `localhost`).
-- `POSTGRES_PORT`: The port the database is running on (e.g., `5432`).
-
+### PgBouncer (for Routes.cpp and pooled queries in pgListener.cpp)
+- `PGBOUNCER_HOST`: Name of Bouncer Service
+- `PGBOUNCER_PORT`: Typically, port 6432
+- `PGBOUNCER_DB`: DB name
+- `PGBOUNCER_USER`: DB user
+- `PGBOUNCER_PASSWORD`: DB user password
+  
+### PostgreSQL Direct (for LISTEN/NOTIFY in pgListener.cpp)
+- `PGDIRECT_HOST`: Name of PG Service
+- `PGDIRECT_PORT`: Typically, port 5432
+- `PGDIRECT_DB`: DB name
+- `PGDIRECT_USER`: DB user
+- `PGDIRECT_PASSWORD`: DB user password
+  
 ## 4. Run the Server
 
 You can run the server from the project's root directory using the following command.
 
 **Important:** Replace the placeholder values (`your_db`, `your_user`, `your_pass`) with your actual database credentials.
-
-```bash
-POSTGRES_DB=your_db POSTGRES_USER=your_user POSTGRES_PASSWORD=your_pass POSTGRES_HOST=localhost POSTGRES_PORT=5432 ./build/server
-```
 
 The server should now be running and connected to your database. You will see output indicating that it is listening for notifications on the `killmail` channel. 
