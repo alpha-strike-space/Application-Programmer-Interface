@@ -1,15 +1,16 @@
-DB_PARAMS = {
-    "dbname": "eve_killmails",
-    "user": "calaw",
-    "password": "1400mmArtilleryCannonII",
-    "host": "localhost",
-    "port": "5432"
-}
-
 import psycopg2
 import requests
 import time
 from typing import Dict, Any, List
+
+# Database connection parameters
+DB_PARAMS = {
+    "dbname": "crowapp",
+    "user": "postgres",
+    "password": "postgres",
+    "host": "localhost",
+    "port": "5432"
+}
 
 def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
@@ -17,7 +18,9 @@ def get_db_connection():
 def create_tables():
     with get_db_connection() as conn:
         with conn.cursor() as cur:
+            # Create citext extension if it doesn't exist
             cur.execute("CREATE EXTENSION IF NOT EXISTS citext;")
+            
             # Create new tables
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS systems (
@@ -41,24 +44,26 @@ def create_tables():
             conn.commit()
 
 def fetch_all_systems() -> List[Dict[str, Any]]:
-    """Fetch all systems using the bulk endpoint"""
+    """Fetch all systems using the bulk endpoint with pagination"""
     all_systems = []
     offset = 0
     limit = 100
-
+    
     while True:
         url = f"https://world-api-stillness.live.tech.evefrontier.com/v2/solarsystems?limit={limit}&offset={offset}"
         response = requests.get(url)
         if response.status_code == 200:
-            data = response.json()['data']
-            if not data:
+            data = response.json()
+            systems = data['data']
+            if not systems:  # Empty array means we've reached the end
                 break
-            all_systems.extend(data)
+            all_systems.extend(systems)
             offset += limit
-            print(f"Fetched {len(data)} systems, total: {len(all_systems)}")
+            print(f"Fetched {len(all_systems)} systems so far...")
         else:
-            print(f"Failed to fetch systems: {response.status_code}")
+            print(f"Failed to fetch systems at offset {offset}")
             break
+    
     return all_systems
 
 def fetch_system_details(system_id: int) -> Dict[str, Any]:
@@ -117,7 +122,7 @@ def main():
                     print(f"Failed to fetch details for system {system_id}")
                 
                 # Add a small delay to avoid overwhelming the API
-                # time.sleep(0.1)
+                time.sleep(0.1)
 
 if __name__ == "__main__":
-    main()
+    main() 

@@ -3,10 +3,8 @@
 -- Table: systems
 CREATE TABLE IF NOT EXISTS systems (
     solar_system_id   BIGINT PRIMARY KEY,
-    solar_system_name TEXT NOT NULL,
-    x                 TEXT,
-    y                 TEXT,
-    z                 TEXT
+    solar_system_name CITEXT NOT NULL,
+    region_id         BIGINT NOT NULL
 );
 
 -- Table: incident
