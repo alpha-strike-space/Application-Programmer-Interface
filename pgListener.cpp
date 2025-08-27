@@ -8,7 +8,6 @@
 #include "Routes.h" // for ws_connections and ws_mutex
 #include <cstdlib> // For getenv
 #include <string>
-
 // Direct Connection
 std::string get_direct_connection_string() {
     const char* dbname = std::getenv("PGDIRECT_DB");
@@ -86,7 +85,7 @@ void listen_notifications() {
                 }
             }
         } catch (const std::exception &e) {
-            std::cerr << "Error in notification listener: " << e.what() << "\nReconnecting in 5s.\n";
+            std::cerr << "Error in notification listener: " << e.what() << std::endl << "Reconnecting in 5s." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
     }
