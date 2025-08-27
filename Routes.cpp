@@ -107,11 +107,11 @@ void setupRoutes(crow::SimpleApp& app) {
     				const char* filter_parameter = req.url_params.get("filter");
 				// Build parameters
                                 // Helper lambda to build search pattern.
-                                auto buildSearchPattern = [](const char* value) -> std::string {
+                                auto build_search_pattern = [](const char* value) -> std::string {
                                         return std::string("%") + std::string(value) + "%";
                                 };
 				// Create a time-based helper lambda to build the time-based clause.
-    				auto getTimeClause = [](const char* filter_param) -> std::string {
+    				auto get_time_clause = [](const char* filter_param) -> std::string {
         				// Check for filter value passed.
 					if (!filter_param)
 						return "";
@@ -132,9 +132,9 @@ void setupRoutes(crow::SimpleApp& app) {
                                 if(name_parameter) {
 					if(name_parameter && std::string(name_parameter).size() > 0) {
 	                                	// Parse our search value name parameter.
-                                        	std::string searchPattern = buildSearchPattern(name_parameter);
+                                        	std::string searchPattern = build_search_pattern(name_parameter);
 						// Work with the filter.
-						std::string timeClause = getTimeClause(filter_parameter);
+						std::string timeClause = get_time_clause(filter_parameter);
 						// Base query
 						std::string baseQuery = "WITH combined AS ("
     									"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, "
@@ -162,7 +162,7 @@ void setupRoutes(crow::SimpleApp& app) {
                                         	res = txn.exec_params(query, searchPattern);
 					} else {
 						// Work with the filter.
-						std::string timeClause = getTimeClause(filter_parameter);
+						std::string timeClause = get_time_clause(filter_parameter);
 						// Base query
 						std::string query = "WITH combined AS ("
     							"  SELECT killer_name AS person, 1 AS kill_count, 0 AS loss_count, i.time_stamp "
@@ -188,7 +188,7 @@ void setupRoutes(crow::SimpleApp& app) {
                                                 return crow::response(400, error_response);
                                         }
 					// Build the JSON using nlohmann
-                                	auto name_string = formatName(res);
+                                	auto name_string = format_name(res);
                                 	// Convert JSON object to string
                                 	std::string json_string = name_string.dump(4); // Pretty printing with indent of 4 spaces
                                 	// Create a Crow response with the correct Content-Type header
@@ -198,9 +198,9 @@ void setupRoutes(crow::SimpleApp& app) {
                                 } else if(system_parameter) {
 					if(system_parameter && std::string(system_parameter).size() > 0) {
                                         	// Convert the string to a 64-bit integer using std::stoll.
-                                        	std::string searchPattern = buildSearchPattern(system_parameter);
+                                        	std::string searchPattern = build_search_pattern(system_parameter);
                                         	// Work with the filter.
-                                        	std::string timeClause = getTimeClause(filter_parameter);
+                                        	std::string timeClause = get_time_clause(filter_parameter);
 						// Base query that aggregates kill/loss counts per "person"
     						// and joins with the systems table to include solar_system_name.
    	 					std::string baseQuery = "SELECT s.solar_system_id, "
@@ -222,14 +222,14 @@ void setupRoutes(crow::SimpleApp& app) {
                                        		res = txn.exec_params(query, searchPattern);
 					} else {
 						// Work with the filter.
-						std::string timeClause = getTimeClause(filter_parameter);
+						std::string timeClause = get_time_clause(filter_parameter);
 						// Empty query string, with a filter for systems.
 						std::string baseQuery = "SELECT s.solar_system_id, s.solar_system_name, COUNT(*) AS incident_count "
                         					"FROM incident i "
                         					"JOIN systems s ON i.solar_system_id = s.solar_system_id";
 						// Empty query string.
 						std::string query;
-						// If getTimeClause returns a non-empty string, add WHERE before it.
+						// If get_time_clause returns a non-empty string, add WHERE before it.
 						if (!timeClause.empty()) {
     							baseQuery += " WHERE " + timeClause + " ";
 						}
@@ -245,7 +245,7 @@ void setupRoutes(crow::SimpleApp& app) {
                                                 return crow::response(400, error_response);
                                         }
 					// Reuse formatTopSystems since returns are the same with nlohmann.
-					auto systems_string = formatSystems(res);
+					auto systems_string = format_systems(res);
                                 	// Convert JSON object to string
                                 	std::string json_string = systems_string.dump(4); // Pretty printing with indent of 4 spaces
                                 	// Create a Crow response with the correct Content-Type header
@@ -254,7 +254,7 @@ void setupRoutes(crow::SimpleApp& app) {
                                 	return resp;
                                 } else {
 					// Work with the filter.
-                                        std::string timeClause = getTimeClause(filter_parameter);
+                                        std::string timeClause = get_time_clause(filter_parameter);
                                         // Base query for the Top Killers
     					// Count rows per killer_name using the provided time filter.
     					std::string qKillers = "SELECT killer_name AS name, COUNT(*) AS incident_count "
@@ -296,9 +296,9 @@ void setupRoutes(crow::SimpleApp& app) {
    	 				resVictims = txn.exec(qVictims);
     					resSystems  = txn.exec(qSystems);
 					// Format each result via its dedicated function.
-        				auto topKillers = formatTopKillers(resKillers);
-        				auto topVictims = formatTopVictims(resVictims);
-        				auto topSystems = formatSystems(resSystems);
+        				auto topKillers = format_top_killers(resKillers);
+        				auto topVictims = format_top_victims(resVictims);
+        				auto topSystems = format_systems(resSystems);
 				        // Assemble the final response.
         				nlohmann::ordered_json response;
         				response["top_killers"] = topKillers;
@@ -340,11 +340,11 @@ void setupRoutes(crow::SimpleApp& app) {
                                 int offset = req.url_params.get("offset") ? std::stoi(req.url_params.get("offset")) : 0;
 				// Build parameters
                                 // Helper lambda to build search pattern.
-                                auto buildSearchPattern = [](const char* value) -> std::string {
+                                auto build_search_pattern = [](const char* value) -> std::string {
                                         return std::string("%") + std::string(value) + "%";
                                 };
 				// Create a time-based helper lambda to build the time-based clause.
-    				auto getTimeClause = [](const char* filter_param) -> std::string {
+    				auto get_time_clause = [](const char* filter_param) -> std::string {
         				// Check for filter value passed.
 					if (!filter_param)
 						return "";
@@ -364,9 +364,9 @@ void setupRoutes(crow::SimpleApp& app) {
                                 // Check the parameters every time we are called up.
                                 if(name_parameter) {
                                         // Parse our search value name parameter.
-                                        std::string searchPattern = buildSearchPattern(name_parameter);
+                                        std::string searchPattern = build_search_pattern(name_parameter);
 					// Work with the filter.
-					std::string timeClause = getTimeClause(filter_parameter);
+					std::string timeClause = get_time_clause(filter_parameter);
 					// Base query
 					std::string baseQuery = "SELECT i.id, COALESCE(i.victim_address, '') AS victim_address, "
 								"COALESCE(i.victim_name, '') AS victim_name, "
@@ -398,9 +398,9 @@ void setupRoutes(crow::SimpleApp& app) {
                                         }
                                 } else if(system_parameter) {
                                         // Convert the string to a 64-bit integer using std::stoll.
-                                        std::string searchPattern = buildSearchPattern(system_parameter);
+                                        std::string searchPattern = build_search_pattern(system_parameter);
                                         // Work with the filter.
-                                        std::string timeClause = getTimeClause(filter_parameter);
+                                        std::string timeClause = get_time_clause(filter_parameter);
 					// Base query
                                         std::string baseQuery = "SELECT i.id, COALESCE(i.victim_address, '') AS victim_address, "
                                                                 "COALESCE(i.victim_name, '') AS victim_name, "
@@ -461,7 +461,7 @@ void setupRoutes(crow::SimpleApp& app) {
                                         }
                                 } else if(filter_parameter) {
 					// Work with the filter.
-                                        std::string timeClause = getTimeClause(filter_parameter);
+                                        std::string timeClause = get_time_clause(filter_parameter);
                                         // Base query
 					std::string baseQuery = "SELECT i.id, COALESCE(i.victim_address, '') AS victim_address, "
     								"COALESCE(i.victim_name, '') AS victim_name, "
