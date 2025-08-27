@@ -1,5 +1,5 @@
 #include "Serializer.h"
-
+// Build incident Json
 nlohmann::ordered_json build_incident_json(const pqxx::result& res) {
     nlohmann::ordered_json json_array = nlohmann::ordered_json::array();
     for (const auto& row : res) {
@@ -17,7 +17,7 @@ nlohmann::ordered_json build_incident_json(const pqxx::result& res) {
     }
     return json_array;
 }
-
+// Build system json
 nlohmann::ordered_json build_system_json(const pqxx::result& res) {
     nlohmann::ordered_json json_array = nlohmann::ordered_json::array();
     for (const auto& row : res) {
@@ -33,8 +33,8 @@ nlohmann::ordered_json build_system_json(const pqxx::result& res) {
     }
     return json_array;
 }
-
-nlohmann::ordered_json formatName(const pqxx::result& resName) {
+// Format the json
+nlohmann::ordered_json format_name(const pqxx::result& resName) {
     nlohmann::ordered_json jsonResponse = nlohmann::ordered_json::array();
     for (const auto& row : resName) {
         nlohmann::ordered_json item;
@@ -45,8 +45,8 @@ nlohmann::ordered_json formatName(const pqxx::result& resName) {
     }
     return jsonResponse;
 }
-
-nlohmann::ordered_json formatTopKillers(const pqxx::result& resKillers) {
+// Format top killers
+nlohmann::ordered_json format_top_killers(const pqxx::result& resKillers) {
     nlohmann::ordered_json topKillers = nlohmann::ordered_json::array();
     for (const auto& row : resKillers) {
         nlohmann::ordered_json item;
@@ -56,8 +56,8 @@ nlohmann::ordered_json formatTopKillers(const pqxx::result& resKillers) {
     }
     return topKillers;
 }
-
-nlohmann::ordered_json formatTopVictims(const pqxx::result& resVictims) {
+// Format top victims
+nlohmann::ordered_json format_top_victims(const pqxx::result& resVictims) {
     nlohmann::ordered_json topVictims = nlohmann::ordered_json::array();
     for (const auto& row : resVictims) {
         nlohmann::ordered_json item;
@@ -67,8 +67,8 @@ nlohmann::ordered_json formatTopVictims(const pqxx::result& resVictims) {
     }
     return topVictims;
 }
-
-nlohmann::ordered_json formatSystems(const pqxx::result& resSystems) {
+// Format systems
+nlohmann::ordered_json format_systems(const pqxx::result& resSystems) {
     nlohmann::ordered_json topSystems = nlohmann::ordered_json::array();
     for (const auto& row : resSystems) {
         nlohmann::ordered_json item;
