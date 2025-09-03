@@ -35,15 +35,15 @@ nlohmann::ordered_json build_system_json(const pqxx::result& res) {
 }
 // Format the json
 nlohmann::ordered_json format_name(const pqxx::result& resName) {
-    nlohmann::ordered_json jsonResponse = nlohmann::ordered_json::array();
+    nlohmann::ordered_json json_array = nlohmann::ordered_json::array();
     for (const auto& row : resName) {
         nlohmann::ordered_json item;
         item["name"] = row["person"].as<std::string>();
         item["total_kills"] = row["total_kills"].as<int>();
         item["total_losses"] = row["total_losses"].as<int>();
-        jsonResponse.push_back(item);
+        json_array.push_back(item);
     }
-    return jsonResponse;
+    return json_array;
 }
 // Format top killers
 nlohmann::ordered_json format_top_killers(const pqxx::result& resKillers) {
