@@ -23,7 +23,6 @@ std::string get_pool_connection_string() {
 		" host=" + std::string(host) +
 		" port=" + std::string(port);
 }
-
 // Health route and all HTTP API routes here
 void setupRoutes(crow::SimpleApp& app) {
 	// Get server health, character count, and kill count
