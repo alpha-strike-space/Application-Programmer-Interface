@@ -6,15 +6,15 @@ nlohmann::ordered_json build_incident_json(const pqxx::result& res) {
         nlohmann::ordered_json item;
         item["id"] = row["id"].as<long long>();
         //item["victim_tribe_name"] = row["victim_tribe_name"].as<std::string>(); // Empty if none presented
-	item["victim_tribe_name"] = row["victim_tribe_name"].as<std::string>().empty() ? "NONE" : row["victim_tribe_name"].as<std::string>();
-	item["victim_address"] = row["victim_address"].as<std::string>();
+		item["victim_tribe_name"] = row["victim_tribe_name"].as<std::string>().empty() ? "NONE" : row["victim_tribe_name"].as<std::string>();
+		item["victim_address"] = row["victim_address"].as<std::string>();
         item["victim_name"] = row["victim_name"].as<std::string>();
-	// Hard write "ship" if loss_type is 0
-	item["loss_type"] = (row["loss_type"].as<int>() == 0) ? "ship" : row["loss_type"].as<std::string>();
+		// Hard write "ship" if loss_type is 0
+		item["loss_type"] = (row["loss_type"].as<int>() == 0) ? "ship" : row["loss_type"].as<std::string>();
         //item["loss_type"] = row["loss_type"].as<std::string>();
         item["killer_tribe_name"] = row["killer_tribe_name"].as<std::string>().empty() ? "NONE" : row["killer_tribe_name"].as<std::string>();
-	//item["killer_tribe_name"] = row["killer_tribe_name"].as<std::string>(); // Empty if none presented
-	item["killer_address"] = row["killer_address"].as<std::string>();
+		//item["killer_tribe_name"] = row["killer_tribe_name"].as<std::string>(); // Empty if none presented
+		item["killer_address"] = row["killer_address"].as<std::string>();
         item["killer_name"] = row["killer_name"].as<std::string>();
         item["time_stamp"] = row["time_stamp"].as<long long>();
         item["solar_system_id"] = row["solar_system_id"].as<long long>();
@@ -45,7 +45,7 @@ nlohmann::ordered_json format_top_names(const pqxx::result& resName) {
     for (const auto& row : resName) {
         nlohmann::ordered_json item;
         item["name"] = row["person"].as<std::string>();
-	item["tribe_name"] = row["tribe_name"].as<std::string>();
+		item["tribe_name"] = row["tribe_name"].as<std::string>();
         item["total_kills"] = row["total_kills"].as<int>();
         item["total_losses"] = row["total_losses"].as<int>();
         json_array.push_back(item);
@@ -104,8 +104,8 @@ nlohmann::ordered_json format_tribe_membership(const pqxx::result& resTribes) {
     std::vector<std::string> members;
     // Check if empty.
     if (resTribes.size() == 0) {
-	nlohmann::json error_json;
-	error_json["error"] = "Not found!";
+		nlohmann::json error_json;
+		error_json["error"] = "Not found!";
         return error_json; // Just in case
     }
     // Use the first row for tribe_id, tribe_name, tribe_url
@@ -120,7 +120,7 @@ nlohmann::ordered_json format_tribe_membership(const pqxx::result& resTribes) {
     // Check to see if we are represented.
     if (!members.empty()) {
         tribe_json["members"] = members;
-	tribe_json["member_count"] = first_row["member_count"].as<long long>(); 
+		tribe_json["member_count"] = first_row["member_count"].as<long long>(); 
     } else {
         tribe_json["members"] = "No members found";
     }
@@ -133,12 +133,12 @@ nlohmann::ordered_json format_tribes(const pqxx::result& resTribes) {
     nlohmann::ordered_json json_array = nlohmann::ordered_json::array();
     // Tribes without members display
     for (const auto& row : resTribes) {
-	nlohmann::ordered_json item;
+		nlohmann::ordered_json item;
         item["tribe_id"] = row["tribe_id"].as<long long>();
         item["tribe_name"] = row["tribe_name"].as<std::string>();
         item["tribe_url"] = row["tribe_url"].is_null() ? "NONE" : row["tribe_url"].as<std::string>();
-	item["member_count"] = row["member_count"].as<long long>(); 
-	json_array.push_back(item);
+		item["member_count"] = row["member_count"].as<long long>(); 
+		json_array.push_back(item);
     }
     // Return the json
     return json_array;
@@ -154,7 +154,7 @@ nlohmann::ordered_json format_characters(const pqxx::result& resChars) {
         std::string tribe = row["tribe_name"].as<std::string>();
         //long long left_date = row["left_at"].as<long long>();
         long long left_date = row["left_at"].is_null() ? -1 : row["left_at"].as<long long>(); // Checking for null, sentinel value
-	// If first time seeing this character, set current tribe
+		// If first time seeing this character, set current tribe
         if (characters.find(address) == characters.end()) {
             nlohmann::ordered_json char_array;
             char_array["character_address"] = address;
