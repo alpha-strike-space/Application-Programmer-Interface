@@ -43,7 +43,10 @@ public:
         }
         filtered_json["id"] = parsed_json["id"];
         filtered_json["victim_name"] = parsed_json["victim_name"];
-        filtered_json["loss_type"] = parsed_json["loss_type"];
+    	// Hard write "ship" if loss_type is 0
+	    int loss_type_val = parsed_json["loss_type"].get<int>();
+	    filtered_json["loss_type"] = (loss_type_val == 0) ? "ship" : parsed_json["loss_type"].get<std::string>();
+    	//filtered_json["loss_type"] = parsed_json["loss_type"];
         filtered_json["killer_name"] = parsed_json["killer_name"];
         filtered_json["time_stamp"] = parsed_json["time_stamp"];
         filtered_json["solar_system_id"] = parsed_json["solar_system_id"];
@@ -60,7 +63,7 @@ public:
         for (auto* ws : ws_connections) ws->send_text(json_string);
     }
 };
-
+// Notifications loop to stay on the database trigger.
 void listen_notifications() {
     while (!shutdown_requested) {
         try {
