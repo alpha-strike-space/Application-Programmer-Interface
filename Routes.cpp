@@ -331,14 +331,14 @@ void setupRoutes(crow::SimpleApp& app) {
 						"FROM combined c "
 						"LEFT JOIN character_tribe_membership m ON c.char_id = m.character_id AND m.left_at IS NULL "
 						"LEFT JOIN tribes t ON m.tribe_id = t.id "
-						"WHERE c.person LIKE $1 ";  //The parameter placeholder for our name search.;
+						"WHERE c.person ILIKE $1 ";  //The parameter placeholder for our name search.;
 					// Empty query string.
 					std::string query;
 					// Append filters
 					if (!timeClause.empty()) {
 						baseQuery += "AND " + timeClause + " ";
 					}
-					query = baseQuery + "GROUP BY c.person;";
+					query = baseQuery + "GROUP BY c.person, t.name;";
 					// Prepare SQL call.
 					res = txn.exec_params(query, searchPattern);
 				} else {
@@ -466,7 +466,7 @@ void setupRoutes(crow::SimpleApp& app) {
 						+ (timeClause.empty() ? "" : "WHERE " + timeClause + " ") +
 						"  GROUP BY ctm.tribe_id "
 						") losses_table ON t.id = losses_table.tribe_id "
-						"WHERE t.name LIKE $1 "
+						"WHERE t.name ILIKE $1 "
 						"ORDER BY kills DESC";
 					// Prepare SQL call.
 					res = txn.exec_params(baseQuery, searchPattern);
@@ -632,7 +632,7 @@ void setupRoutes(crow::SimpleApp& app) {
 						"LEFT JOIN character_tribe_membership killer_ctm ON killer_ctm.character_id = killer.id AND killer_ctm.joined_at <= i.time_stamp AND (killer_ctm.left_at IS NULL OR killer_ctm.left_at > i.time_stamp) "
 						"LEFT JOIN tribes AS killer_tribe ON killer_ctm.tribe_id = killer_tribe.id "
 						"JOIN systems AS s ON i.solar_system_id = s.solar_system_id "
-						"WHERE (victim.name LIKE $1 OR killer.name LIKE $1)";
+						"WHERE (victim.name ILIKE $1 OR killer.name ILIKE $1)";
 					std::string query;
 					if(!timeClause.empty()) {
 						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
@@ -733,7 +733,7 @@ void setupRoutes(crow::SimpleApp& app) {
 						"LEFT JOIN tribes victim_tribe ON victim.tribe_id = victim_tribe.id "
 						"LEFT JOIN characters killer ON i.killer_id = killer.id "
 						"LEFT JOIN tribes killer_tribe ON killer.tribe_id = killer_tribe.id "
-						"WHERE (killer_tribe.name LIKE $1 OR victim_tribe.name LIKE $1)";
+						"WHERE (killer_tribe.name ILIKE $1 OR victim_tribe.name ILIKE $1)";
 					std::string query;
 					if(!timeClause.empty()) {
 						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
