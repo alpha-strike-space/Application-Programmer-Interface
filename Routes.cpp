@@ -635,9 +635,9 @@ void setupRoutes(crow::SimpleApp& app) {
 						"WHERE (victim.name ILIKE $1 OR killer.name ILIKE $1)";
 					std::string query;
 					if(!timeClause.empty()) {
-						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
+						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
 					} else {
-						query = baseQuery + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
+						query = baseQuery + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
 					}
 					res = txn.exec_params(query, searchPattern, limit, offset);
 					if (res.size() == 0) {
@@ -670,9 +670,9 @@ void setupRoutes(crow::SimpleApp& app) {
 						"WHERE (i.solar_system_id::text ILIKE $1 OR s.solar_system_name ILIKE $1)";
 					std::string query;
 					if(!timeClause.empty()) {
-						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
+						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
 					} else {
-						query = baseQuery + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
+						query = baseQuery + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
 					}
 					res = txn.exec_params(query, searchPattern, limit, offset);
 					if (res.size() == 0) {
@@ -736,9 +736,9 @@ void setupRoutes(crow::SimpleApp& app) {
 						"WHERE (killer_tribe.name ILIKE $1 OR victim_tribe.name ILIKE $1)";
 					std::string query;
 					if(!timeClause.empty()) {
-						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
+						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
 					} else {
-						query = baseQuery + " ORDER BY i.time_stamp DESC LIMIT $2 OFFSET $3;";
+						query = baseQuery + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
 					}
 					res = txn.exec_params(query, searchPattern, limit, offset);
 					if (res.size() == 0) {
@@ -769,9 +769,9 @@ void setupRoutes(crow::SimpleApp& app) {
 						"JOIN systems AS s ON i.solar_system_id = s.solar_system_id";
 					std::string query;
 					if(!timeClause.empty()) {
-						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC LIMIT $1 OFFSET $2;";
+						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $1 OFFSET $2;";
 					} else {
-						query = baseQuery + " ORDER BY i.time_stamp DESC LIMIT $1 OFFSET $2;";
+						query = baseQuery + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $1 OFFSET $2;";
 					}
 					res = txn.exec_params(query, limit, offset);
 					if (res.size() == 0) {
@@ -799,7 +799,7 @@ void setupRoutes(crow::SimpleApp& app) {
 						"LEFT JOIN character_tribe_membership killer_ctm ON killer_ctm.character_id = killer.id AND killer_ctm.joined_at <= i.time_stamp AND (killer_ctm.left_at IS NULL OR killer_ctm.left_at > i.time_stamp) "
 						"LEFT JOIN tribes AS killer_tribe ON killer_ctm.tribe_id = killer_tribe.id "
 						"JOIN systems AS s ON i.solar_system_id = s.solar_system_id "
-						"ORDER BY i.time_stamp DESC LIMIT $1 OFFSET $2;";
+						"ORDER BY i.time_stamp DESC, i.id DESC LIMIT $1 OFFSET $2;";
 					res = txn.exec_params(query, limit, offset);
 					if (res.size() == 0) {
 						crow::json::wvalue error_response;
