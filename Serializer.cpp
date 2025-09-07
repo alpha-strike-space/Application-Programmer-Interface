@@ -101,7 +101,8 @@ nlohmann::ordered_json format_top_tribes(const pqxx::result& resTribes) {
 // Format tribe characters
 nlohmann::ordered_json format_tribe_membership(const pqxx::result& resTribes) {
     nlohmann::ordered_json tribe_json;
-    std::vector<std::string> members;
+    //std::vector<std::string> members;
+    std::vector<nlohmann::ordered_json> members;
     // Check if empty.
     if (resTribes.size() == 0) {
 		nlohmann::json error_json;
@@ -115,7 +116,10 @@ nlohmann::ordered_json format_tribe_membership(const pqxx::result& resTribes) {
     tribe_json["tribe_url"] = first_row["tribe_url"].as<std::string>();
     // Run through all names that are members for display.
     for (const auto& row : resTribes) {
-        members.push_back(row["member_name"].as<std::string>());
+        nlohmann::ordered_json member;
+		member["member_address"] = row["member_address"].as<std::string>();
+        member["member_name"] = row["member_name"].as<std::string>();
+        members.push_back(member);
     }
     // Check to see if we are represented.
     if (!members.empty()) {
@@ -167,9 +171,9 @@ nlohmann::ordered_json format_characters(const pqxx::result& resChars) {
         nlohmann::ordered_json history_item;
         history_item["tribe_name"] = tribe;
         //history_item["left_date"] = left_date;
-        // If left_at is null, show "NEVER LEFT", else show actual value
+        // If left_at is null, show "CURRENT", else show actual value
         if (row["left_at"].is_null()) {
-            history_item["left_date"] = "NEVER LEFT";
+            history_item["left_date"] = "CURRENT";
         } else {
             history_item["left_date"] = row["left_at"].as<long long>();
         }
