@@ -741,25 +741,25 @@ void setupRoutes(crow::SimpleApp& app) {
 					std::string searchPattern = build_search_pattern(tribe_parameter);
 					std::string timeClause = get_time_clause(filter_parameter);
 					std::string baseQuery =	"SELECT i.id, "
-                        "COALESCE(victim_tribe.name, '') AS victim_tribe_name, "
-                        "COALESCE(encode(victim.address, 'hex'), '') AS victim_address, "
-                        "COALESCE(victim.name, '') AS victim_name, "
-                        "COALESCE(killer_tribe.name, '') AS killer_tribe_name, "
-                        "COALESCE(encode(killer.address, 'hex'), '') AS killer_address, "
-                        "COALESCE(killer.name, '') AS killer_name, "
-                        "i.solar_system_id, "
-                        "s.solar_system_name, "
-                        "i.loss_type, "
-                        "i.time_stamp "
-                        "FROM incident AS i "
-                        "JOIN systems AS s ON i.solar_system_id = s.solar_system_id "
-                        "LEFT JOIN characters victim ON i.victim_id = victim.id "
-                        "LEFT JOIN character_tribe_membership victim_ctm ON victim_ctm.character_id = victim.id AND victim_ctm.joined_at <= i.>
-                        "LEFT JOIN tribes victim_tribe ON victim_ctm.tribe_id = victim_tribe.id "
-                        "LEFT JOIN characters killer ON i.killer_id = killer.id "
-                        "LEFT JOIN character_tribe_membership killer_ctm ON killer_ctm.character_id = killer.id AND killer_ctm.joined_at <= i.>
-                        "LEFT JOIN tribes killer_tribe ON killer_ctm.tribe_id = killer_tribe.id "
-                        "WHERE (killer_tribe.name ILIKE $1 OR victim_tribe.name ILIKE $1)";
+						"COALESCE(victim_tribe.name, '') AS victim_tribe_name, "
+						"COALESCE(encode(victim.address, 'hex'), '') AS victim_address, "
+						"COALESCE(victim.name, '') AS victim_name, "
+						"COALESCE(killer_tribe.name, '') AS killer_tribe_name, "
+						"COALESCE(encode(killer.address, 'hex'), '') AS killer_address, "
+						"COALESCE(killer.name, '') AS killer_name, "
+						"i.solar_system_id, "
+						"s.solar_system_name, "
+						"i.loss_type, "
+						"i.time_stamp "
+						"FROM incident AS i "
+						"JOIN systems AS s ON i.solar_system_id = s.solar_system_id "
+						"LEFT JOIN characters victim ON i.victim_id = victim.id "
+						"LEFT JOIN character_tribe_membership victim_ctm ON victim_ctm.character_id = victim.id AND victim_ctm.joined_at <= i.time_stamp AND (victim_ctm.left_at IS NULL OR victim_ctm.left_at > i.time_stamp) "
+						"LEFT JOIN tribes victim_tribe ON victim_ctm.tribe_id = victim_tribe.id "
+						"LEFT JOIN characters killer ON i.killer_id = killer.id "
+						"LEFT JOIN character_tribe_membership killer_ctm ON killer_ctm.character_id = killer.id AND killer_ctm.joined_at <= i.time_stamp AND (killer_ctm.left_at IS NULL OR killer_ctm.left_at > i.time_stamp) "
+						"LEFT JOIN tribes killer_tribe ON killer_ctm.tribe_id = killer_tribe.id "
+						"WHERE (killer_tribe.name ILIKE $1 OR victim_tribe.name ILIKE $1)";
 					std::string query;
 					if(!timeClause.empty()) {
 						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
