@@ -68,6 +68,7 @@ void setupRoutes(crow::SimpleApp& app) {
 			pqxx::result res;
 			// Check for parameters by initializin a pointer for the url sent.
 			const char* name_parameter = req.url_params.get("name");
+			const char* address_parameter = req.url_params.get("address");
 			// Check the parameters every time we are called up.
 			if (name_parameter) {
                 // Parse our search value name_parameter
