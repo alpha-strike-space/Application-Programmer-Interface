@@ -85,12 +85,34 @@ void setupRoutes(crow::SimpleApp& app) {
 					"WHERE LOWER(c.name) LIKE LOWER($1) "
 					"ORDER BY (m.left_at IS NULL) DESC, m.joined_at DESC";
 				res = txn.exec_params(query, searchPattern);
-                                // Check if query returned any rows.
-                                if (res.size() == 0) {
-                                        crow::json::wvalue error_response;
-                                        error_response["error"] = "Bad Request! No character records found";
-                                        return crow::response(400, error_response);
-                                }
+                // Check if query returned any rows.
+                if (res.size() == 0) {
+                 	crow::json::wvalue error_response;
+                	error_response["error"] = "Bad Request! No character records found";
+                    return crow::response(400, error_response);
+                }
+			} else if (address_parameter) {
+				// Parse our search value address_parameter
+				std::string searchPattern = "%" + std::string(address_parameter) + "%";
+				// The query
+				std::string query = "SELECT "
+					"c.name, "
+					"encode(c.address, 'hex') AS character_address, "
+					"t.name AS tribe_name, "
+					"m.joined_at, "
+					"m.left_at "
+					"FROM characters c "
+					"LEFT JOIN character_tribe_membership m ON c.id = m.character_id "
+					"LEFT JOIN tribes t ON m.tribe_id = t.id "
+					"WHERE encode(c.address, 'hex') LIKE $1 "
+					"ORDER BY (m.left_at IS NULL) DESC, m.joined_at DESC";
+				res = txn.exec_params(query, searchPattern);
+                // Check if query returned any rows.
+                if (res.size() == 0) {
+                 	crow::json::wvalue error_response;
+                	error_response["error"] = "Bad Request! No character records found";
+                    return crow::response(400, error_response);
+                }
 			} else {
 				// Nothing found
 				crow::json::wvalue error_response;
@@ -141,6 +163,7 @@ void setupRoutes(crow::SimpleApp& app) {
 					"    t.name AS tribe_name, "
 					"    t.url AS tribe_url, "
 					"    c.name AS member_name, "
+					"    encode(c.address, 'hex') AS member_address, "
 					"    (SELECT COUNT(*) "
 					"    	 FROM character_tribe_membership m2 "
 					"        WHERE m2.tribe_id = t.id AND m2.left_at IS NULL) AS member_count "
@@ -149,8 +172,8 @@ void setupRoutes(crow::SimpleApp& app) {
 					"LEFT JOIN characters c ON m.character_id = c.id "
 					"WHERE LOWER(t.name) LIKE LOWER($1) "
 					"ORDER BY t.id, c.name";
-				res = txn.exec_params(query, searchPattern);
-                                // Check if query returned any rows.
+					res = txn.exec_params(query, searchPattern);
+                // Check if query returned any rows.
 				if (res.size() == 0) {
 					crow::json::wvalue error_response;
 					error_response["error"] = "Bad Request! No tribe records found";
@@ -178,12 +201,12 @@ void setupRoutes(crow::SimpleApp& app) {
 					"FROM tribes t "
 					"ORDER BY t.id";
 				res = txn.exec(query);
-                                // Check if query returned any rows.
-                                if (res.size() == 0) {
-                                        crow::json::wvalue error_response;
-                                        error_response["error"] = "Bad Request! No tribe records found";
-                                        return crow::response(400, error_response);
-                                }
+                // Check if query returned any rows.
+                if (res.size() == 0) {
+                	crow::json::wvalue error_response;
+                    error_response["error"] = "Bad Request! No tribe records found";
+                    return crow::response(400, error_response);
+                }
 				// Transact
 				txn.commit();
 				// Build the JSON using nlohmann
@@ -266,27 +289,27 @@ void setupRoutes(crow::SimpleApp& app) {
 		}
 		// Try user input.
 		try {
-			// Get your PostgreSQL connection
-			pqxx::connection conn{get_pool_connection_string()};
-			pqxx::work txn(conn);
-			pqxx::result res;
-			pqxx::result resKillers;
-			pqxx::result resVictims;
-			pqxx::result resSystems;
-			pqxx::result resTribes;
-			// Check for the parameters by initializing a pointer for the url sent.
-			const char* name_parameter = req.url_params.get("name"); // name
-			const char* system_parameter = req.url_params.get("system"); // system by id or name
-			// Extract the "filter" parameter (e.g., "24h", "week", or "month")
-			const char* filter_parameter = req.url_params.get("filter");
-			const char* tribe_parameter = req.url_params.get("tribe"); // tribe
-			// Build parameters
-			// Helper lambda to build search pattern.
-			auto build_search_pattern = [](const char* value) -> std::string {
+				// Get your PostgreSQL connection
+				pqxx::connection conn{get_pool_connection_string()};
+				pqxx::work txn(conn);
+				pqxx::result res;
+				pqxx::result resKillers;
+				pqxx::result resVictims;
+				pqxx::result resSystems;
+				pqxx::result resTribes;
+				// Check for the parameters by initializing a pointer for the url sent.
+				const char* name_parameter = req.url_params.get("name"); // name
+				const char* system_parameter = req.url_params.get("system"); // system by id or name
+				// Extract the "filter" parameter (e.g., "24h", "week", or "month")
+				const char* filter_parameter = req.url_params.get("filter");
+				const char* tribe_parameter = req.url_params.get("tribe"); // tribe
+				// Build parameters
+				// Helper lambda to build search pattern.
+				auto build_search_pattern = [](const char* value) -> std::string {
 				return std::string("%") + std::string(value) + "%";
 			};
-			// Create a time-based helper lambda to build the time-based clause.
-			auto get_time_clause = [](const char* filter_param) -> std::string {
+				// Create a time-based helper lambda to build the time-based clause.
+				auto get_time_clause = [](const char* filter_param) -> std::string {
 				// Check for filter value passed.
 				if (!filter_param)
 					return "";
@@ -717,23 +740,25 @@ void setupRoutes(crow::SimpleApp& app) {
 					std::string searchPattern = build_search_pattern(tribe_parameter);
 					std::string timeClause = get_time_clause(filter_parameter);
 					std::string baseQuery =	"SELECT i.id, "
-						"COALESCE(victim_tribe.name, '') AS victim_tribe_name, "
-						"COALESCE(encode(victim.address, 'hex'), '') AS victim_address, "
-						"COALESCE(victim.name, '') AS victim_name, "
-						"COALESCE(killer_tribe.name, '') AS killer_tribe_name, "
-						"COALESCE(encode(killer.address, 'hex'), '') AS killer_address, "
-						"COALESCE(killer.name, '') AS killer_name, "
-						"i.solar_system_id, "
-						"s.solar_system_name, "
-						"i.loss_type, "
-						"i.time_stamp "
-						"FROM incident AS i "
-						"JOIN systems AS s ON i.solar_system_id = s.solar_system_id "
-						"LEFT JOIN characters victim ON i.victim_id = victim.id "
-						"LEFT JOIN tribes victim_tribe ON victim.tribe_id = victim_tribe.id "
-						"LEFT JOIN characters killer ON i.killer_id = killer.id "
-						"LEFT JOIN tribes killer_tribe ON killer.tribe_id = killer_tribe.id "
-						"WHERE (killer_tribe.name ILIKE $1 OR victim_tribe.name ILIKE $1)";
+                        "COALESCE(victim_tribe.name, '') AS victim_tribe_name, "
+                        "COALESCE(encode(victim.address, 'hex'), '') AS victim_address, "
+                        "COALESCE(victim.name, '') AS victim_name, "
+                        "COALESCE(killer_tribe.name, '') AS killer_tribe_name, "
+                        "COALESCE(encode(killer.address, 'hex'), '') AS killer_address, "
+                        "COALESCE(killer.name, '') AS killer_name, "
+                        "i.solar_system_id, "
+                        "s.solar_system_name, "
+                        "i.loss_type, "
+                        "i.time_stamp "
+                        "FROM incident AS i "
+                        "JOIN systems AS s ON i.solar_system_id = s.solar_system_id "
+                        "LEFT JOIN characters victim ON i.victim_id = victim.id "
+                        "LEFT JOIN character_tribe_membership victim_ctm ON victim_ctm.character_id = victim.id AND victim_ctm.joined_at <= i.>
+                        "LEFT JOIN tribes victim_tribe ON victim_ctm.tribe_id = victim_tribe.id "
+                        "LEFT JOIN characters killer ON i.killer_id = killer.id "
+                        "LEFT JOIN character_tribe_membership killer_ctm ON killer_ctm.character_id = killer.id AND killer_ctm.joined_at <= i.>
+                        "LEFT JOIN tribes killer_tribe ON killer_ctm.tribe_id = killer_tribe.id "
+                        "WHERE (killer_tribe.name ILIKE $1 OR victim_tribe.name ILIKE $1)";
 					std::string query;
 					if(!timeClause.empty()) {
 						query = baseQuery + " AND " + timeClause + " ORDER BY i.time_stamp DESC, i.id DESC LIMIT $2 OFFSET $3;";
