@@ -71,8 +71,8 @@ void setupRoutes(crow::SimpleApp& app) {
 			const char* address_parameter = req.url_params.get("address");
 			// Check the parameters every time we are called up.
 			if (name_parameter) {
-                // Parse our search value name_parameter
-                std::string searchPattern = "%" + std::string(name_parameter) + "%";
+				// Parse our search value name_parameter
+				std::string searchPattern = "%" + std::string(name_parameter) + "%";
 				// The query
 				std::string query = "SELECT "
 					"    c.name, "
@@ -86,12 +86,12 @@ void setupRoutes(crow::SimpleApp& app) {
 					"WHERE LOWER(c.name) LIKE LOWER($1) "
 					"ORDER BY (m.left_at IS NULL) DESC, m.joined_at DESC";
 				res = txn.exec_params(query, searchPattern);
-                // Check if query returned any rows.
-                if (res.size() == 0) {
-                 	crow::json::wvalue error_response;
-                	error_response["error"] = "Bad Request! No character records found";
-                    return crow::response(400, error_response);
-                }
+				// Check if query returned any rows.
+				if (res.size() == 0) {
+					crow::json::wvalue error_response;
+					error_response["error"] = "Bad Request! No character records found";
+					return crow::response(400, error_response);
+				}
 			} else if (address_parameter) {
 				// Parse our search value address_parameter
 				std::string searchPattern = "%" + std::string(address_parameter) + "%";
@@ -108,12 +108,12 @@ void setupRoutes(crow::SimpleApp& app) {
 					"WHERE encode(c.address, 'hex') LIKE $1 "
 					"ORDER BY (m.left_at IS NULL) DESC, m.joined_at DESC";
 				res = txn.exec_params(query, searchPattern);
-                // Check if query returned any rows.
-                if (res.size() == 0) {
-                 	crow::json::wvalue error_response;
-                	error_response["error"] = "Bad Request! No character records found";
-                    return crow::response(400, error_response);
-                }
+				// Check if query returned any rows.
+				if (res.size() == 0) {
+					crow::json::wvalue error_response;
+					error_response["error"] = "Bad Request! No character records found";
+					return crow::response(400, error_response);
+				}
 			} else {
 				// Nothing found
 				crow::json::wvalue error_response;
@@ -173,8 +173,8 @@ void setupRoutes(crow::SimpleApp& app) {
 					"LEFT JOIN characters c ON m.character_id = c.id "
 					"WHERE LOWER(t.name) LIKE LOWER($1) "
 					"ORDER BY t.id, c.name";
-					res = txn.exec_params(query, searchPattern);
-                // Check if query returned any rows.
+				res = txn.exec_params(query, searchPattern);
+				// Check if query returned any rows.
 				if (res.size() == 0) {
 					crow::json::wvalue error_response;
 					error_response["error"] = "Bad Request! No tribe records found";
@@ -202,12 +202,12 @@ void setupRoutes(crow::SimpleApp& app) {
 					"FROM tribes t "
 					"ORDER BY t.id";
 				res = txn.exec(query);
-                // Check if query returned any rows.
-                if (res.size() == 0) {
-                	crow::json::wvalue error_response;
-                    error_response["error"] = "Bad Request! No tribe records found";
-                    return crow::response(400, error_response);
-                }
+				// Check if query returned any rows.
+				if (res.size() == 0) {
+					crow::json::wvalue error_response;
+					error_response["error"] = "Bad Request! No tribe records found";
+					return crow::response(400, error_response);
+				}
 				// Transact
 				txn.commit();
 				// Build the JSON using nlohmann
@@ -244,7 +244,8 @@ void setupRoutes(crow::SimpleApp& app) {
 					// Parse our search value system_parameter
 					std::string searchPattern = "%" + std::string(system_parameter) + "%";
 					// Prepare SQL call.
-					res = txn.exec_params("SELECT solar_system_name, solar_system_id, x, y, z FROM systems"
+					res = txn.exec_params(
+						"SELECT solar_system_name, solar_system_id, x, y, z FROM systems"
 						" WHERE solar_system_name ILIKE $1 or solar_system_id::text ILIKE $1;",
 						searchPattern
 					);
@@ -290,27 +291,27 @@ void setupRoutes(crow::SimpleApp& app) {
 		}
 		// Try user input.
 		try {
-				// Get your PostgreSQL connection
-				pqxx::connection conn{get_pool_connection_string()};
-				pqxx::work txn(conn);
-				pqxx::result res;
-				pqxx::result resKillers;
-				pqxx::result resVictims;
-				pqxx::result resSystems;
-				pqxx::result resTribes;
-				// Check for the parameters by initializing a pointer for the url sent.
-				const char* name_parameter = req.url_params.get("name"); // name
-				const char* system_parameter = req.url_params.get("system"); // system by id or name
-				// Extract the "filter" parameter (e.g., "24h", "week", or "month")
-				const char* filter_parameter = req.url_params.get("filter");
-				const char* tribe_parameter = req.url_params.get("tribe"); // tribe
-				// Build parameters
-				// Helper lambda to build search pattern.
-				auto build_search_pattern = [](const char* value) -> std::string {
+			// Get your PostgreSQL connection
+			pqxx::connection conn{get_pool_connection_string()};
+			pqxx::work txn(conn);
+			pqxx::result res;
+			pqxx::result resKillers;
+			pqxx::result resVictims;
+			pqxx::result resSystems;
+			pqxx::result resTribes;
+			// Check for the parameters by initializing a pointer for the url sent.
+			const char* name_parameter = req.url_params.get("name"); // name
+			const char* system_parameter = req.url_params.get("system"); // system by id or name
+			// Extract the "filter" parameter (e.g., "24h", "week", or "month")
+			const char* filter_parameter = req.url_params.get("filter");
+			const char* tribe_parameter = req.url_params.get("tribe"); // tribe
+			// Build parameters
+			// Helper lambda to build search pattern.
+			auto build_search_pattern = [](const char* value) -> std::string {
 				return std::string("%") + std::string(value) + "%";
 			};
-				// Create a time-based helper lambda to build the time-based clause.
-				auto get_time_clause = [](const char* filter_param) -> std::string {
+			// Create a time-based helper lambda to build the time-based clause.
+			auto get_time_clause = [](const char* filter_param) -> std::string {
 				// Check for filter value passed.
 				if (!filter_param)
 					return "";
