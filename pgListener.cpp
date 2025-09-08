@@ -121,11 +121,13 @@ class NotifyListener : public pqxx::notification_receiver {
 		filtered_json["victim_address"] = victim_address;
 		// Check loss type
 		std::string loss_type;
-		if (parsed_json["loss_type"].is_number_integer() && parsed_json["loss_type"].get<int>() == 0) {
-			// Make sure we are dumping a string for the websocket.
+		if (parsed_json["loss_type"].is_string()) {
+			loss_type = parsed_json["loss_type"].get<std::string>();
+		} else if (parsed_json["loss_type"].is_number_integer()) {
+			int loss_type_val = parsed_json["loss_type"].get<int>();
 			loss_type = (loss_type_val == 0) ? "ship/structure" : std::to_string(loss_type_val);
 		} else {
-			loss_type = parsed_json["loss_type"].get<std::string>();
+			loss_type = "";
 		}
 		filtered_json["loss_type"] = loss_type;
 		filtered_json["killer_tribe_name"] = killer_tribe_name;
