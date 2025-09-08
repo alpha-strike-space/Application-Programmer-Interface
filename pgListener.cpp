@@ -73,31 +73,31 @@ class NotifyListener : public pqxx::notification_receiver {
 			std::cerr << "Error: " << e.what() << std::endl;
 		}
 		// Get killer information
-                std::string killer_name, killer_tribe_name, killer_address;
-                try {
-                        pqxx::result k_res = txn.exec_params("SELECT c.name, t.name, c.address "
-                                                "FROM characters c "
-                                                "LEFT JOIN character_tribe_membership ctm "
-                                                "ON c.id = ctm.character_id "
-                                                "AND ctm.joined_at <= $2 "
-                                                "AND (ctm.left_at IS NULL OR ctm.left_at > $2) "
-                                                "LEFT JOIN tribes t ON ctm.tribe_id = t.id "
-                                                "WHERE c.id = $1 LIMIT 1;",
-                                                parsed_json["killer_id"].get<std::string>(),
-                                                parsed_json["time_stamp"].get<long long>());
-                        // Check query information and store.
-                        if (!k_res.empty()) {
-                                killer_name = k_res[0][0].as<std::string>();
-                                killer_tribe_name = k_res[0][1].is_null() ? "" : k_res[0][1].as<std::string>();
-                                killer_address = k_res[0][2].is_null() ? "" : k_res[0][2].as<std::string>();
-                        }
-                } catch (const std::exception& e) {
-                        // Default in case there is an issue with database.
-                        killer_name = "";
-                        killer_tribe_name = "";
-                        killer_address = "";
-                        std::cerr << "Error: " << e.what() << std::endl;
-                }
+		std::string killer_name, killer_tribe_name, killer_address;
+		try {
+			pqxx::result k_res = txn.exec_params("SELECT c.name, t.name, c.address "
+						"FROM characters c "
+						"LEFT JOIN character_tribe_membership ctm "
+						"ON c.id = ctm.character_id "
+						"AND ctm.joined_at <= $2 "
+						"AND (ctm.left_at IS NULL OR ctm.left_at > $2) "
+						"LEFT JOIN tribes t ON ctm.tribe_id = t.id "
+						"WHERE c.id = $1 LIMIT 1;",
+						parsed_json["killer_id"].get<std::string>(),
+						parsed_json["time_stamp"].get<long long>());
+			// Check query information and store.
+			if (!k_res.empty()) {
+				killer_name = k_res[0][0].as<std::string>();
+				killer_tribe_name = k_res[0][1].is_null() ? "" : k_res[0][1].as<std::string>();
+				killer_address = k_res[0][2].is_null() ? "" : k_res[0][2].as<std::string>();
+			}
+		} catch (const std::exception& e) {
+			// Default in case there is an issue with database.
+			killer_name = "";
+			killer_tribe_name = "";
+			killer_address = "";
+			std::cerr << "Error: " << e.what() << std::endl;
+		}
 		// Get system information
 		std::string solar_system_name;
 		try {
@@ -134,7 +134,7 @@ class NotifyListener : public pqxx::notification_receiver {
 		filtered_json["solar_system_id"] = parsed_json["solar_system_id"];
 		filtered_json["solar_system_name"] = solar_system_name;
 		// Dump that json back as a string for send off
-        	std::string json_string = filtered_json.dump(4);
+		std::string json_string = filtered_json.dump(4);
 		// Run through all json string packages
 		for (auto* ws : ws_connections) {
 			ws->send_text(json_string); // Send out string across websocket mutex.
