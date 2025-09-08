@@ -57,7 +57,7 @@ class NotifyListener : public pqxx::notification_receiver {
 						"AND (ctm.left_at IS NULL OR ctm.left_at > $2) "
 						"LEFT JOIN tribes t ON ctm.tribe_id = t.id "
 						"WHERE c.id = $1 LIMIT 1;",
-						parsed_json["victim_id"].get<std::string>(),
+						parsed_json["victim_id"].get<long long>(),
 						parsed_json["time_stamp"].get<long long>());
 			// Check query information and store.
 			if (!v_res.empty()) {
@@ -83,7 +83,7 @@ class NotifyListener : public pqxx::notification_receiver {
 						"AND (ctm.left_at IS NULL OR ctm.left_at > $2) "
 						"LEFT JOIN tribes t ON ctm.tribe_id = t.id "
 						"WHERE c.id = $1 LIMIT 1;",
-						parsed_json["killer_id"].get<std::string>(),
+						parsed_json["killer_id"].get<long long>(),
 						parsed_json["time_stamp"].get<long long>());
 			// Check query information and store.
 			if (!k_res.empty()) {
