@@ -37,15 +37,15 @@ class NotifyListener : public pqxx::notification_receiver {
         	std::lock_guard<std::mutex> lock(ws_mutex);
         	nlohmann::ordered_json filtered_json;
         	nlohmann::ordered_json parsed_json;
-        	// Try loading json to serialize
+		// Try loading json to serialize
 		try {
-        		parsed_json = nlohmann::json::parse(payload);
-        	} catch (const nlohmann::json::parse_error& e) {
-        		throw std::runtime_error("Failed to parse JSON: " + std::string(e.what()));
-        	}
+			parsed_json = nlohmann::json::parse(payload);
+		} catch (const nlohmann::json::parse_error& e) {
+			throw std::runtime_error("Failed to parse JSON: " + std::string(e.what()));
+		}
 		// Time to initialize the postgresql connection
-    		pqxx::connection conn(get_pool_connection_string());
-    		pqxx::work txn(conn);
+		pqxx::connection conn(get_pool_connection_string());
+		pqxx::work txn(conn);
 		// Get victim information
 		std::string victim_name, victim_tribe_name, victim_address;
 		try {
@@ -136,7 +136,7 @@ class NotifyListener : public pqxx::notification_receiver {
 		// Dump that json back as a string for send off
         	std::string json_string = filtered_json.dump(4);
 		// Run through all json string packages
-        	for (auto* ws : ws_connections) {
+		for (auto* ws : ws_connections) {
 			ws->send_text(json_string); // Send out string across websocket mutex.
 		}
     	}
