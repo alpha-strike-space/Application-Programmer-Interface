@@ -122,7 +122,8 @@ class NotifyListener : public pqxx::notification_receiver {
 		// Check loss type
 		std::string loss_type;
 		if (parsed_json["loss_type"].is_number_integer() && parsed_json["loss_type"].get<int>() == 0) {
-			loss_type = "ship/structure";
+			// Make sure we are dumping a string for the websocket.
+			loss_type = (loss_type_val == 0) ? "ship/structure" : std::to_string(loss_type_val);
 		} else {
 			loss_type = parsed_json["loss_type"].get<std::string>();
 		}
