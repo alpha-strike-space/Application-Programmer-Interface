@@ -154,6 +154,8 @@ void setupRoutes(crow::SimpleApp& app) {
 			pqxx::result res;
 			// Check for parameters by initializing a pointer for the url sent.
 			const char* name_parameter = req.url_params.get("name");
+			int limit = req.url_params.get("limit") ? std::stoi(req.url_params.get("limit")) : 100;
+			int offset = req.url_params.get("offset") ? std::stoi(req.url_params.get("offset")) : 0;
 			// Check the parameters every time we are called up.
 			if (name_parameter) {
 				// Parse our search value name_parameter
@@ -172,8 +174,9 @@ void setupRoutes(crow::SimpleApp& app) {
 					"LEFT JOIN character_tribe_membership m ON t.id = m.tribe_id AND m.left_at IS NULL "
 					"LEFT JOIN characters c ON m.character_id = c.id "
 					"WHERE LOWER(t.name) LIKE LOWER($1) "
-					"ORDER BY t.id, c.name";
-				res = txn.exec_params(query, searchPattern);
+					"ORDER BY t.id, c.name "
+					"LIMIT $2 OFFSET $3";
+				res = txn.exec_params(query, searchPattern, limit, offset);
 				// Check if query returned any rows.
 				if (res.size() == 0) {
 					crow::json::wvalue error_response;

@@ -43,13 +43,14 @@ class NotifyListener : public pqxx::notification_receiver {
 		} catch (const nlohmann::json::parse_error& e) {
 			throw std::runtime_error("Failed to parse JSON: " + std::string(e.what()));
 		}
+		std::cout << parsed_json.dump(4) << std::endl;
 		// Time to initialize the postgresql connection
 		pqxx::connection conn(get_pool_connection_string());
 		pqxx::work txn(conn);
 		// Get victim information
 		std::string victim_name, victim_tribe_name, victim_address;
 		try {
-			pqxx::result v_res = txn.exec_params("SELECT c.name, t.name, c.address "
+			pqxx::result v_res = txn.exec_params("SELECT c.name, t.name, encode(c.address, 'hex') "
 						"FROM characters c "
 						"LEFT JOIN character_tribe_membership ctm "
 						"ON c.id = ctm.character_id "
@@ -57,7 +58,7 @@ class NotifyListener : public pqxx::notification_receiver {
 						"AND (ctm.left_at IS NULL OR ctm.left_at > $2) "
 						"LEFT JOIN tribes t ON ctm.tribe_id = t.id "
 						"WHERE c.id = $1 LIMIT 1;",
-						parsed_json["victim_id"].get<long long>(),
+						parsed_json["victim_id"].get<std::string>(),
 						parsed_json["time_stamp"].get<long long>());
 			// Check query information and store.
 			if (!v_res.empty()) {
@@ -75,7 +76,7 @@ class NotifyListener : public pqxx::notification_receiver {
 		// Get killer information
 		std::string killer_name, killer_tribe_name, killer_address;
 		try {
-			pqxx::result k_res = txn.exec_params("SELECT c.name, t.name, c.address "
+			pqxx::result k_res = txn.exec_params("SELECT c.name, t.name, encode(c.address, 'hex') "
 						"FROM characters c "
 						"LEFT JOIN character_tribe_membership ctm "
 						"ON c.id = ctm.character_id "
@@ -83,7 +84,7 @@ class NotifyListener : public pqxx::notification_receiver {
 						"AND (ctm.left_at IS NULL OR ctm.left_at > $2) "
 						"LEFT JOIN tribes t ON ctm.tribe_id = t.id "
 						"WHERE c.id = $1 LIMIT 1;",
-						parsed_json["killer_id"].get<long long>(),
+						parsed_json["killer_id"].get<std::string>(),
 						parsed_json["time_stamp"].get<long long>());
 			// Check query information and store.
 			if (!k_res.empty()) {
