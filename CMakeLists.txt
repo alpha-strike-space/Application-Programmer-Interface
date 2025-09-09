@@ -42,7 +42,6 @@ FetchContent_Declare(
 		"-DPostgreSQL_LIBRARY=${PostgreSQL_LIBRARY}"
 )
 FetchContent_MakeAvailable(libpqxx)
-
 # If we received pqxx_static we create an alias for when pqxx is linked later for server.cpp file.
 if(TARGET pqxx_static AND NOT TARGET pqxx::pqxx)
 	add_library(pqxx::pqxx ALIAS pqxx_static)
@@ -51,7 +50,6 @@ endif()
 if(TARGET pqxx AND NOT TARGET pqxx::pqxx)
 	add_library(pqxx::pqxx ALIAS pqxx)
 endif()
-
 # FetchContent to download the nlohmann json library for us to use.
 FetchContent_Declare(
 	nlohmann_json
@@ -59,7 +57,6 @@ FetchContent_Declare(
 	GIT_TAG v3.12.0  # Specification for release or commit tag from the repository.
 )
 FetchContent_MakeAvailable(nlohmann_json)
-
 # Add your source files here (update this list as needed)
 set(SOURCES
 	Server.cpp
@@ -67,10 +64,8 @@ set(SOURCES
 	pgListener.cpp
 	Serializer.cpp
 )
-
 # Put together
 add_executable(server ${SOURCES})
-
 # Includes from dependencies
 target_include_directories(server PRIVATE
 	${crow_SOURCE_DIR}/include
@@ -80,14 +75,13 @@ target_include_directories(server PRIVATE
 	${PostgreSQL_INCLUDE_DIRS}
 	${ASIO_INCLUDE_DIR}
 )
-
 # Target libraries. Use pqxx::pqxx if available, otherwise fallback.
 if(TARGET pqxx::pqxx)
 	set(PQXX_TARGET pqxx::pqxx)
 else()
 	set(PQXX_TARGET pqxx)
 endif()
-
+# Linking for compile
 target_link_libraries(server PRIVATE
 	nlohmann_json::nlohmann_json
 	${PQXX_TARGET}

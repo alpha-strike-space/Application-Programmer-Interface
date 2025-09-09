@@ -43,7 +43,8 @@ class NotifyListener : public pqxx::notification_receiver {
 		} catch (const nlohmann::json::parse_error& e) {
 			throw std::runtime_error("Failed to parse JSON: " + std::string(e.what()));
 		}
-		std::cout << parsed_json.dump(4) << std::endl;
+		// Check json string from incident trigger channel in postgresql
+		//std::cout << parsed_json.dump(4) << std::endl;
 		// Time to initialize the postgresql connection
 		pqxx::connection conn(get_pool_connection_string());
 		pqxx::work txn(conn);
@@ -123,7 +124,8 @@ class NotifyListener : public pqxx::notification_receiver {
 		// Check loss type
 		std::string loss_type;
 		if (parsed_json["loss_type"].is_string()) {
-			loss_type = parsed_json["loss_type"].get<std::string>();
+			std::string loss_type_value = parsed_json["loss_type"].get<std::string>();
+			loss_type = (loss_type_value == "0") ? "ship/structure" : loss_type_value; // Make sure we are not "0"
 		} else if (parsed_json["loss_type"].is_number_integer()) {
 			int loss_type_val = parsed_json["loss_type"].get<int>();
 			loss_type = (loss_type_val == 0) ? "ship/structure" : std::to_string(loss_type_val);
